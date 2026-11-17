@@ -283,7 +283,7 @@
                         </a>
                         <a href="?tab=qc-rcv-board" onclick="navigateTab(event, 'qc-rcv-board')" id="nav-qc-rcv-board" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                             <i class="fas fa-clipboard-list text-xs w-4 text-center"></i>
-                            <span>Kedatangan Material</span>
+                            <span>Material Receipt</span>
                         </a>
                         <a href="?tab=qc-scan" onclick="navigateTab(event, 'qc-scan')" id="nav-qc-scan" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                             <i class="fas fa-qrcode text-xs w-4 text-center"></i>
@@ -1056,7 +1056,7 @@
                         <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600 border border-amber-100"><i class="fas fa-clipboard-list"></i></div>
                         <div>
                             <h2 class="text-sm font-extrabold text-slate-800">Papan Informasi Material Receiving</h2>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Dashboard Kedatangan Material</p>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Dashboard Material Receipt</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -2582,6 +2582,7 @@
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcPatrol" value="qc-patrol" class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"><span>QC Patrol</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcOutgoing" value="qc-outgoing" class="w-3.5 h-3.5 rounded text-sky-600 focus:ring-sky-500"><span>QC Outgoing</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcReceiving" value="qc-receiving" class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500"><span>QC Receiving</span></label>
+                            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcRcvBoard" value="qc-rcv-board" class="w-3.5 h-3.5 rounded text-orange-600 focus:ring-orange-500"><span>Material Receipt</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcScan" value="qc-scan" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><span>Scan Barcode &amp; QR</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permRsSupplier" value="report-supplier" class="w-3.5 h-3.5 rounded text-rose-600 focus:ring-rose-500"><span>Report Supplier</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permEmpProfile" value="emp-profile" class="w-3.5 h-3.5 rounded text-teal-600 focus:ring-teal-500"><span>Employee Profile</span></label>
@@ -3697,7 +3698,7 @@
                 activeMobileNav.className = "flex flex-col items-center gap-1 text-[10px] font-semibold text-brand-400";
             }
 
-            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Kedatangan Material', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
+            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
             document.getElementById('headerTitle').textContent = titles[tabId] || 'Portal';
 
             // Sub-menu QC: auto-buka + sorot parent saat salah satu tab QC aktif
@@ -5247,8 +5248,13 @@
            - tanpa sub-perm sama sekali -> semua anak tampil (kompatibel data lama) */
         function qcChildAllowed(perms, tabId) {
             if (tabId === 'gemba-qc') return true;
-            // Sub-menu Kedatangan Material ikut izin QC Receiving
-            if (tabId === 'qc-rcv-board') return qcChildAllowed(perms, 'qc-receiving');
+            // Material Receipt: sub-perm lama 'qc-receiving' tetap mencakupnya (data user lama),
+            // sementara checklist baru bisa memberikan akses Material Receipt saja.
+            if (tabId === 'qc-rcv-board') {
+                const p = perms || [];
+                if (!QC_TABS.some(t => p.includes(t))) return true;
+                return p.includes('qc-rcv-board') || p.includes('qc-receiving');
+            }
             const p = perms || [];
             const adaSub = QC_TABS.some(t => p.includes(t));
             return adaSub ? p.includes(tabId) : true;
@@ -5524,7 +5530,7 @@
             { tab: 'qc-patrol', icon: 'fa-user-shield', label: 'QC Patrol', color: 'bg-emerald-50 text-emerald-600' },
             { tab: 'qc-outgoing', icon: 'fa-truck-fast', label: 'QC Outgoing', color: 'bg-sky-50 text-sky-600' },
             { tab: 'qc-receiving', icon: 'fa-dolly', label: 'QC Receiving', color: 'bg-amber-50 text-amber-600' },
-            { tab: 'qc-rcv-board', icon: 'fa-clipboard-list', label: 'Kedatangan Material', color: 'bg-cyan-50 text-cyan-600' },
+            { tab: 'qc-rcv-board', icon: 'fa-clipboard-list', label: 'Material Receipt', color: 'bg-cyan-50 text-cyan-600' },
             { tab: 'qc-scan', icon: 'fa-qrcode', label: 'Scan Barcode & QR', color: 'bg-blue-50 text-blue-600' },
             { tab: 'report-supplier', icon: 'fa-chart-line', label: 'Report Supplier', color: 'bg-rose-50 text-rose-600' },
             { tab: 'emp-profile', icon: 'fa-id-card', label: 'Employee Profile', color: 'bg-teal-50 text-teal-600' }
@@ -8041,7 +8047,7 @@
             document.getElementById('uId').value = '';
             setPasswordHidden('uPassword', 'eyeIconUser');
             
-            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcScan', 'permRsSupplier', 'permEmpProfile'].forEach(cb => document.getElementById(cb).checked = false);
+            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcScan', 'permRsSupplier', 'permEmpProfile'].forEach(cb => document.getElementById(cb).checked = false);
             document.getElementById('qcSubPermsBox').classList.add('hide');
 
             if (action === 'create') {
@@ -8075,7 +8081,7 @@
                     if(perms.includes('documents')) document.getElementById('permDocument').checked = true;
                     // Sub-menu Quality: bila akun punya sub-perm -> centang sesuai data;
                     // tanpa sub-perm sama sekali -> semua dicentang (artinya semua sub tampil)
-                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
+                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
                     const adaQcSub = Object.keys(qcSubIds).some(t => perms.includes(t));
                     Object.keys(qcSubIds).forEach(t => document.getElementById(qcSubIds[t]).checked = adaQcSub ? perms.includes(t) : true);
                 }
@@ -8116,7 +8122,7 @@
                     permissions.push('gemba-qc');
                     // Sub-menu Quality granular: bila hanya SEBAGIAN yang dicentang -> simpan sub-perm;
                     // semua dicentang / kosong semua -> cukup 'gemba-qc' (semua anak tampil)
-                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
+                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
                     const ids = Object.keys(qcSubIds);
                     const checked = ids.filter(t => document.getElementById(qcSubIds[t]).checked);
                     if (checked.length > 0 && checked.length < ids.length) checked.forEach(t => permissions.push(t));
