@@ -155,6 +155,14 @@ $TABLES = [
         'table' => 'master_customers',
         'cols'  => ['id','cust_id','name','address','created_at'],
     ],
+    // Transaksi gudang (Warehouse inbound/outbound): id "WH-<ts>-<i>" dari client.
+    // partNo/partName dipetakan otomatis ke part_no/part_name via $MAP,
+    // createdAt -> created_at ($DATETIME_COLS). qty numeric.
+    'WhTx' => [
+        'table' => 'wh_tx',
+        'cols'  => ['id','type','date','customer','part_no','part_name','qty','note','pic','created_at'],
+        'num'   => ['qty'],
+    ],
 ];
 
 /* ------------------------------------------------------------

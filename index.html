@@ -69,6 +69,8 @@
         #sidebar.side-mini .nav-btn span { display: none !important; }   /* nama modul + badge angka */
         #sidebar.side-mini #qcSubmenuArrow { display: none; }            /* panah submenu */
         #sidebar.side-mini #qcSubmenu { padding-left: 0; }
+        #sidebar.side-mini #whSubmenuArrow { display: none; }
+        #sidebar.side-mini #whSubmenu { padding-left: 0; }
         #sidebar.side-mini #masterSubmenuArrow { display: none; }        /* panah submenu master */
         #sidebar.side-mini #masterSubmenu { padding-left: 0; }
         #sidebar.side-mini #empSubmenuArrow { display: none; }           /* panah submenu employee */
@@ -308,6 +310,27 @@
                         </div>
                     </div>
                 </div>
+                <div id="nav-warehouse-wrap" class="hide">
+                    <button type="button" onclick="toggleWhSubmenu()" id="nav-warehouse" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                        <i class="fas fa-warehouse text-sm w-5 text-center"></i>
+                        <span>Warehouse</span>
+                        <i id="whSubmenuArrow" class="fas fa-chevron-down text-[0.6rem] ml-auto transition-transform duration-200 -rotate-90"></i>
+                    </button>
+                    <div id="whSubmenu" class="hide pl-3 pt-1 space-y-1">
+                        <a href="?tab=wh-transaksi" onclick="navigateTab(event, 'wh-transaksi')" id="nav-wh-transaksi" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-right-left text-xs w-4 text-center"></i>
+                            <span>Transaksi</span>
+                        </a>
+                        <a href="?tab=wh-ledger" onclick="navigateTab(event, 'wh-ledger')" id="nav-wh-ledger" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-file-invoice text-xs w-4 text-center"></i>
+                            <span>Report Detail</span>
+                        </a>
+                        <a href="?tab=wh-printdn" onclick="navigateTab(event, 'wh-printdn')" id="nav-wh-printdn" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-print text-xs w-4 text-center"></i>
+                            <span>Print DN</span>
+                        </a>
+                    </div>
+                </div>
                 <a href="?tab=documents" onclick="navigateTab(event, 'documents')" id="nav-documents" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all hide">
                     <i class="fas fa-folder-open text-sm w-5 text-center"></i>
                     <span>Arsip Dokumen</span>
@@ -371,6 +394,9 @@
         </a>
         <a href="?tab=gemba-qc" onclick="openQcMobileMenu(); return false;" id="mobile-nav-gemba-qc" class="flex flex-col items-center gap-1 text-[10px] font-semibold">
             <i class="fas fa-microscope text-base"></i><span>QC</span>
+        </a>
+        <a href="?tab=wh-transaksi" onclick="openWhMobileMenu(); return false;" id="mobile-nav-warehouse" class="flex flex-col items-center gap-1 text-[10px] font-semibold hide">
+            <i class="fas fa-warehouse text-base"></i><span>Gudang</span>
         </a>
         <a href="?tab=documents" onclick="navigateTab(event, 'documents')" id="mobile-nav-documents" class="flex flex-col items-center gap-1 text-[10px] font-semibold hide">
             <i class="fas fa-folder-open text-base"></i><span>Arsip</span>
@@ -1192,6 +1218,214 @@
                     <div class="rounded-xl border border-slate-100 bg-slate-50 p-4"><div class="text-[0.7rem] font-extrabold text-slate-600 uppercase mb-3">Distribusi Status</div><div class="flex items-center gap-4"><div id="empDonut" class="w-28 h-28 rounded-full shrink-0"></div><div id="empLegend" class="text-[0.7rem] font-bold text-slate-600 space-y-1"></div></div></div>
                 </div>
                 <div class="overflow-x-auto"><table class="w-full text-xs"><thead id="empHead" class="bg-slate-50 text-slate-500 uppercase text-[0.65rem]"></thead><tbody id="empBody" class="divide-y divide-slate-100"></tbody></table></div>
+            </div>
+        </section>
+
+        <!-- ===== WAREHOUSE: Transaksi (Inbound / Outbound) ===== -->
+        <section id="view-wh-transaksi" class="p-3 md:p-5 space-y-4 hide">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="whTxStats"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-3">
+                        <h2 class="text-sm font-extrabold text-slate-800"><i class="fas fa-industry text-emerald-600 mr-2"></i> Inbound (Masuk)</h2>
+                        <span class="text-[0.65rem] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded uppercase tracking-wide">Tambah Stok</span>
+                    </div>
+                    <form id="formWhInbound" onsubmit="whProcessTx(event, 'IN'); return false;" class="flex flex-col flex-1 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Tanggal</label>
+                                <input type="date" id="whInDate" class="w-full text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:border-emerald-500 outline-none" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Customer / Sumber (Opsional)</label>
+                                <select id="whInCustomer" class="wh-cust-select w-full text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:border-emerald-500 outline-none"></select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Catatan / No. Referensi (Opsional)</label>
+                            <input type="text" id="whInNote" maxlength="200" placeholder="mis. No. PO / Surat Jalan supplier" class="w-full text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:border-emerald-500 outline-none">
+                        </div>
+                        <div class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col">
+                            <label class="block text-xs font-bold text-slate-500 mb-2">Item Produk (Bisa Multi-Produk)</label>
+                            <div id="whInRows" class="space-y-2 flex-1 min-h-[120px]"></div>
+                            <button type="button" onclick="whAddTxRow('whInRows')" class="text-xs text-blue-600 font-bold mt-3 hover:bg-blue-50 flex items-center self-start bg-white border border-blue-200 px-3 py-1.5 rounded-lg shadow-sm"><i class="fas fa-plus-circle mr-1.5"></i> Tambah Baris Produk</button>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex gap-2">
+                            <button type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-2.5 rounded-lg text-xs font-bold shadow-sm flex justify-center items-center"><i class="fas fa-check mr-2"></i> Proses Inbound</button>
+                            <button type="button" onclick="document.getElementById('whInFile').click()" class="bg-white border border-slate-200 text-emerald-600 px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50" title="Kolom CSV: part_no, qty"><i class="fas fa-file-csv mr-1"></i> Import CSV</button>
+                            <input type="file" id="whInFile" accept=".csv" class="hidden" onchange="whImportCSV(event, 'whInRows')">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-3">
+                        <h2 class="text-sm font-extrabold text-slate-800"><i class="fas fa-truck-ramp-box text-orange-600 mr-2"></i> Outbound (Keluar)</h2>
+                        <span class="text-[0.65rem] font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded uppercase tracking-wide">Kurangi Stok</span>
+                    </div>
+                    <form id="formWhOutbound" onsubmit="whProcessTx(event, 'OUT'); return false;" class="flex flex-col flex-1 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Tanggal</label>
+                                <input type="date" id="whOutDate" class="w-full text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:border-orange-500 outline-none" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 mb-1">Customer / Tujuan (Opsional)</label>
+                                <select id="whOutCustomer" class="wh-cust-select w-full text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:border-orange-500 outline-none"></select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">Catatan / No. DN (Opsional)</label>
+                            <input type="text" id="whOutNote" maxlength="200" placeholder="mis. No. DN / PO customer" class="w-full text-xs font-medium border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 focus:bg-white focus:border-orange-500 outline-none">
+                        </div>
+                        <div class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col">
+                            <label class="block text-xs font-bold text-slate-500 mb-2">Item Produk (Bisa Multi-Produk)</label>
+                            <div id="whOutRows" class="space-y-2 flex-1 min-h-[120px]"></div>
+                            <button type="button" onclick="whAddTxRow('whOutRows')" class="text-xs text-blue-600 font-bold mt-3 hover:bg-blue-50 flex items-center self-start bg-white border border-blue-200 px-3 py-1.5 rounded-lg shadow-sm"><i class="fas fa-plus-circle mr-1.5"></i> Tambah Baris Produk</button>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex gap-2">
+                            <button type="submit" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2.5 rounded-lg text-xs font-bold shadow-sm flex justify-center items-center"><i class="fas fa-share-from-square mr-2"></i> Proses Outbound</button>
+                            <button type="button" onclick="document.getElementById('whOutFile').click()" class="bg-white border border-slate-200 text-orange-600 px-4 py-2.5 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50" title="Kolom CSV: part_no, qty"><i class="fas fa-file-csv mr-1"></i> Import CSV</button>
+                            <input type="file" id="whOutFile" accept=".csv" class="hidden" onchange="whImportCSV(event, 'whOutRows')">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-xs font-extrabold text-slate-700 uppercase tracking-wide"><i class="fas fa-clock-rotate-left text-slate-400 mr-1.5"></i> Transaksi Terakhir</h3>
+                    <a href="?tab=wh-ledger" onclick="navigateTab(event, 'wh-ledger')" class="text-[11px] font-bold text-blue-600 hover:underline">Lihat Report Detail &rarr;</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-[0.65rem]">
+                            <tr><th class="px-2 py-2">Tanggal</th><th class="px-2 py-2">Tipe</th><th class="px-2 py-2">Part No</th><th class="px-2 py-2">Part Name</th><th class="px-2 py-2">Customer</th><th class="px-2 py-2 text-right">Qty</th><th class="px-2 py-2">PIC</th></tr>
+                        </thead>
+                        <tbody id="whRecentBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== WAREHOUSE: Report Detail (Ledger mutasi stok) ===== -->
+        <section id="view-wh-ledger" class="p-3 md:p-5 space-y-4 hide">
+            <div class="flex flex-wrap justify-between items-end bg-white p-4 rounded-2xl shadow-sm border border-slate-200 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-50 p-2.5 rounded-xl text-indigo-600 border border-indigo-100"><i class="fas fa-file-invoice"></i></div>
+                    <div>
+                        <h2 class="text-sm font-extrabold text-slate-800">Report Detail</h2>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Laporan Mutasi Stok</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-end gap-3">
+                    <div class="flex flex-col">
+                        <label class="text-[0.65rem] font-bold text-slate-500 mb-1 uppercase">Filter Customer</label>
+                        <select id="whLedgerCustomer" onchange="whFillLedgerProducts(); renderWhLedger()" class="wh-cust-select text-xs border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 font-medium outline-none w-44"></select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[0.65rem] font-bold text-slate-500 mb-1 uppercase">Filter Produk</label>
+                        <select id="whLedgerProduct" onchange="renderWhLedger()" class="text-xs border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 font-mono font-medium outline-none w-60"></select>
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[0.65rem] font-bold text-slate-500 mb-1 uppercase">Dari Tanggal</label>
+                        <input type="date" id="whLedgerFrom" onchange="renderWhLedger()" class="text-xs border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 font-medium outline-none w-36">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-[0.65rem] font-bold text-slate-500 mb-1 uppercase">Sampai Tanggal</label>
+                        <input type="date" id="whLedgerTo" onchange="renderWhLedger()" class="text-xs border border-slate-200 rounded-lg px-2 py-2 bg-slate-50 font-medium outline-none w-36">
+                    </div>
+                    <button type="button" onclick="exportWhLedgerCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center shadow-sm h-[34px]"><i class="fas fa-file-csv mr-1.5"></i> Export CSV</button>
+                    <button type="button" onclick="printWhLedger()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center shadow-md h-[34px]"><i class="fas fa-print mr-2"></i> Print Laporan</button>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-wrap justify-between items-center gap-2 text-sm font-bold text-slate-800 mb-3">
+                    <div><span class="text-slate-500 mr-2">Product</span><span id="whLedgerHeader">: -</span></div>
+                    <div id="whLedgerSummary" class="flex gap-2 text-[11px]"></div>
+                </div>
+                <div class="overflow-x-auto border border-slate-300">
+                    <table class="w-full text-left text-xs border-collapse text-slate-800 min-w-max">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="w-24 text-center border border-slate-300 p-2">Date</th>
+                                <th class="w-32 border border-slate-300 p-2">Description</th>
+                                <th class="border border-slate-300 p-2">Note</th>
+                                <th class="text-right w-24 border border-slate-300 p-2">In</th>
+                                <th class="text-right w-24 border border-slate-300 p-2">Out</th>
+                                <th class="text-right w-28 border border-slate-300 p-2">Quantity</th>
+                                <th class="text-center w-20 border border-slate-300 p-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="whLedgerBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== WAREHOUSE: Print DN (Surat Jalan) ===== -->
+        <section id="view-wh-printdn" class="p-3 md:p-5 hide">
+            <div class="flex flex-col xl:flex-row gap-4">
+                <div class="w-full xl:w-[380px] bg-white p-4 rounded-2xl shadow-sm border border-slate-200 shrink-0 space-y-3">
+                    <h2 class="font-extrabold text-slate-800 text-sm border-b border-slate-100 pb-3 flex items-center justify-between">
+                        <span><i class="fas fa-file-invoice text-blue-600 mr-2"></i> Generator Surat Jalan</span>
+                        <button type="button" onclick="printWhDn()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm"><i class="fas fa-print mr-1"></i> Print</button>
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Tanggal Cetak</label>
+                            <input type="date" id="whDnDate" oninput="renderWhDnPreview()" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">Nama Group</label>
+                            <input type="text" id="whDnGroup" value="GROUP L" maxlength="40" oninput="renderWhDnPreview()" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase">
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                        <h3 class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1">Informasi Tujuan</h3>
+                        <select id="whDnCustomer" onchange="whDnPickCustomer()" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white font-medium text-slate-700"></select>
+                        <input type="text" id="whDnToName" maxlength="150" oninput="renderWhDnPreview()" placeholder="Nama Perusahaan Tujuan" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 font-bold uppercase">
+                        <textarea id="whDnToAddress" maxlength="300" oninput="renderWhDnPreview()" placeholder="Alamat Lengkap Tujuan" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 h-16"></textarea>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                        <h3 class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200 pb-1">Referensi Dokumen</h3>
+                        <div class="flex items-center gap-2">
+                            <label class="w-16 text-[0.65rem] font-bold text-slate-600">NO DN</label>
+                            <input type="text" id="whDnNo" maxlength="60" oninput="renderWhDnPreview()" placeholder="17544/SNR/CBT/XI/2026" class="flex-1 min-w-0 text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase font-mono">
+                            <button type="button" onclick="whDnAutoNo()" class="bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 px-2.5 py-2 rounded-lg text-[0.65rem] font-bold whitespace-nowrap" title="Generate Nomor DN Otomatis"><i class="fas fa-wand-magic-sparkles mr-1"></i>Auto</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="w-16 text-[0.65rem] font-bold text-slate-600">PO.FO No</label>
+                            <input type="text" id="whDnPoNo" maxlength="80" oninput="renderWhDnPreview()" class="flex-1 min-w-0 text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase font-mono">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="w-16 text-[0.65rem] font-bold text-slate-600">PO Date</label>
+                            <input type="date" id="whDnPoDate" oninput="renderWhDnPreview()" class="flex-1 min-w-0 text-xs border border-slate-200 rounded-lg px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">PIC Diperiksa</label>
+                            <input type="text" id="whDnPicCek" maxlength="60" oninput="renderWhDnPreview()" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">PIC Dibuat</label>
+                            <input type="text" id="whDnPicBuat" maxlength="60" oninput="renderWhDnPreview()" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase">
+                        </div>
+                    </div>
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <h3 class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider mb-2 flex justify-between items-center border-b border-slate-200 pb-1">
+                            <span>Item Barang</span>
+                            <span class="flex gap-1">
+                                <button type="button" onclick="whDnFromOutbound()" class="text-orange-600 hover:bg-orange-50 px-2 py-0.5 rounded border border-transparent hover:border-orange-200" title="Isi dari transaksi Outbound customer & tanggal ini"><i class="fas fa-truck-ramp-box mr-1"></i>Dari Outbound</button>
+                                <button type="button" onclick="whDnAddRow()" class="text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded border border-transparent hover:border-blue-200"><i class="fas fa-plus mr-1"></i>Baris</button>
+                            </span>
+                        </h3>
+                        <div id="whDnRows" class="space-y-2"></div>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-200/50 p-4 md:p-6 rounded-2xl overflow-x-auto flex justify-center items-start border border-slate-200 min-w-0">
+                    <div id="whDnPreview" class="bg-white shadow-2xl shrink-0" style="width:210mm;min-height:148.5mm"></div>
+                </div>
             </div>
         </section>
 
@@ -2589,6 +2823,17 @@
                             <p class="text-[9px] text-slate-400 italic">* Semua dicentang / kosong semua = seluruh sub-menu tampil. "Audit Gemba QC" selalu ikut modul Quality.</p>
                         </div>
                         <label class="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
+                            <input type="checkbox" id="permWarehouse" value="warehouse" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500" onchange="document.getElementById('whSubPermsBox').classList.toggle('hide', !this.checked)">
+                            <span>Warehouse</span>
+                        </label>
+                        <div id="whSubPermsBox" class="hide pl-6 ml-3 border-l-2 border-slate-200 space-y-1.5 py-1">
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sub-menu Warehouse yang boleh tampil:</p>
+                            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhTransaksi" value="wh-transaksi" class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"><span>Transaksi</span></label>
+                            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhLedger" value="wh-ledger" class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500"><span>Report Detail</span></label>
+                            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhPrintdn" value="wh-printdn" class="w-3.5 h-3.5 rounded text-orange-600 focus:ring-orange-500"><span>Print DN</span></label>
+                            <p class="text-[9px] text-slate-400 italic">* Semua dicentang / kosong semua = seluruh sub-menu tampil.</p>
+                        </div>
+                        <label class="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
                             <input type="checkbox" id="permDocument" value="documents" class="w-4 h-4 rounded text-teal-600 focus:ring-teal-500">
                             <span>Arsip Dokumen</span>
                         </label>
@@ -2671,6 +2916,17 @@
                 </div>
             </div>
             <div id="qcScanReaderFile" class="hide"></div>
+        </div>
+    </div>
+
+    <!-- MODAL MENU WAREHOUSE (mobile) -->
+    <div id="whMobileMenu" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end md:items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('whMobileMenu')">
+        <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl modal-animate" onclick="event.stopPropagation()">
+            <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-sm"><i class="fas fa-warehouse text-emerald-600 mr-1"></i> Menu Warehouse</h3>
+                <button onclick="closeModal('whMobileMenu')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-3 grid grid-cols-2 gap-2" id="whMobileMenuList"></div>
         </div>
     </div>
 
@@ -2999,6 +3255,7 @@
                 localStorage.setItem('kaizen_folders', JSON.stringify(FOLDERS));
                 localStorage.setItem('kaizen_master_products', JSON.stringify(MP_DATA));
                 localStorage.setItem('kaizen_master_customers', JSON.stringify(MC_DATA));
+                localStorage.setItem('kaizen_wh', JSON.stringify(WH_DATA));
                 updateSidebarBadges();
             } catch (e) {
                 console.error("Storage Error:", e);
@@ -3092,7 +3349,7 @@
         // Master Data (mirror QMS #products / #customers)
         let MP_DATA = JSON.parse(localStorage.getItem('kaizen_master_products')) || [];
         let MC_DATA = JSON.parse(localStorage.getItem('kaizen_master_customers')) || [];
-
+        let WH_DATA = JSON.parse(localStorage.getItem('kaizen_wh')) || [];   // transaksi gudang (inbound/outbound)
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -3354,6 +3611,7 @@
                     if (serverData.Folders) FOLDERS = serverData.Folders;
                     if (serverData.Products) MP_DATA = serverData.Products;
                     if (serverData.Customers) MC_DATA = serverData.Customers;
+                    if (serverData.WhTx) WH_DATA = serverData.WhTx;
 
                     persistData();
 
@@ -3439,6 +3697,7 @@
                 if (initialTab === 'gemba' && !perms.includes('gemba')) initialTab = 'dashboard';
                 if ((initialTab === 'gemba-qc' || QC_TABS.includes(initialTab)) && !perms.includes('gemba-qc')) initialTab = 'dashboard';
                 if (initialTab !== 'gemba-qc' && QC_TABS.includes(initialTab) && !qcChildAllowed(perms, initialTab)) initialTab = 'dashboard';
+                if (WH_TABS.includes(initialTab) && !whChildAllowed(perms, initialTab)) initialTab = 'dashboard';
                 if (initialTab === 'documents' && !perms.includes('documents')) initialTab = 'dashboard';
                 if (initialTab === 'reports' || initialTab === 'users') initialTab = 'dashboard';
                 if ((initialTab === 'master-produk' || initialTab === 'master-customer') && user.role !== 'admin') initialTab = 'dashboard';
@@ -3523,7 +3782,7 @@
         /* Kunci link "?tab=<modul>" (menu sidebar): hanya nama tab yang sah */
         function tabDariURL() {
             const t = (new URLSearchParams(location.search).get('tab') || '').trim();
-            const TAB_SAHSIH = ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'documents', 'reports', 'users', 'master-produk', 'master-customer'];
+            const TAB_SAHSIH = ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'documents', 'reports', 'users', 'master-produk', 'master-customer'];
             if (!TAB_SAHSIH.includes(t) || t === 'dashboard') return null;   // null = pakai default
             return t;
         }
@@ -3561,6 +3820,7 @@
                     // Seluruh keluarga QC diizinkan lewat izin 'gemba-qc'
                     if ((initialTab === 'gemba-qc' || QC_TABS.includes(initialTab)) && !perms.includes('gemba-qc')) initialTab = 'dashboard';
                 if (initialTab !== 'gemba-qc' && QC_TABS.includes(initialTab) && !qcChildAllowed(perms, initialTab)) initialTab = 'dashboard';
+                if (WH_TABS.includes(initialTab) && !whChildAllowed(perms, initialTab)) initialTab = 'dashboard';
                 if ((initialTab === 'master-produk' || initialTab === 'master-customer') && user.role !== 'admin') initialTab = 'dashboard';
                 }
                 switchTab(initialTab);
@@ -3664,6 +3924,7 @@
                 if (tabId === 'gemba' && !perms.includes('gemba')) { showToast('Anda tidak memiliki akses ke menu Gemba HSE!', 'error'); return; }
                 if ((tabId === 'gemba-qc' || QC_TABS.includes(tabId)) && !perms.includes('gemba-qc')) { showToast('Anda tidak memiliki akses ke menu Quality!', 'error'); return; }
                 if (tabId !== 'gemba-qc' && QC_TABS.includes(tabId) && !qcChildAllowed(perms, tabId)) { showToast('Sub-menu Quality ini tidak diberikan ke akun Anda!', 'error'); return; }
+                if (WH_TABS.includes(tabId) && !whChildAllowed(perms, tabId)) { showToast('Anda tidak memiliki akses ke menu Warehouse ini!', 'error'); return; }
                 if (tabId === 'documents' && !perms.includes('documents')) { showToast('Anda tidak memiliki akses ke menu Arsip Dokumen!', 'error'); return; }
                 if (tabId === 'reports') { showToast('Akses Ditolak! Hanya Superadmin.', 'error'); return; }
                 if (tabId === 'users' && user.role !== 'admin') { showToast('Akses Ditolak! Kelola akun hanya untuk Admin & Superadmin.', 'error'); return; }
@@ -3671,7 +3932,7 @@
             }
 
             APP_STATE.activeTab = tabId;
-            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
+            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
                 const el = document.getElementById(`view-${t}`);
                 if (el) el.classList.add('hide');
 
@@ -3698,7 +3959,7 @@
                 activeMobileNav.className = "flex flex-col items-center gap-1 text-[10px] font-semibold text-brand-400";
             }
 
-            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
+            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
             document.getElementById('headerTitle').textContent = titles[tabId] || 'Portal';
 
             // Sub-menu QC: auto-buka + sorot parent saat salah satu tab QC aktif
@@ -3714,6 +3975,12 @@
             if (tabId === 'master-produk' || tabId === 'master-customer') {
                 toggleMasterSubmenu(true);
                 const parent = document.getElementById('nav-master');
+                if (parent) parent.classList.add('bg-slate-800', 'text-white');
+            }
+
+            if (WH_TABS.includes(tabId)) {
+                toggleWhSubmenu(true);
+                const parent = document.getElementById('nav-warehouse');
                 if (parent) parent.classList.add('bg-slate-800', 'text-white');
             }
 
@@ -3736,6 +4003,9 @@
             if (tabId === 'users') renderUsers();
             if (tabId === 'master-produk') renderMasterProducts();
             if (tabId === 'master-customer') renderMasterCustomers();
+            if (tabId === 'wh-transaksi') renderWhTransaksi();
+            if (tabId === 'wh-ledger') renderWhLedger();
+            if (tabId === 'wh-printdn') renderWhPrintDn();
         }
 
         /* ===== DASHBOARD: filter periode bulan/tahun ===== */
@@ -4043,6 +4313,12 @@
             // Performance Report Quality tepat di bawahnya) langsung terlihat tanpa klik panah.
             // switchTab() juga memaksa terbuka setiap kali tab keluarga QC aktif.
             if (isSuperadmin || perms.includes('gemba-qc')) toggleQcSubmenu(true);
+
+            const hasWh = isSuperadmin || perms.includes('warehouse');
+            toggleVis('nav-warehouse-wrap', hasWh);
+            toggleVis('mobile-nav-warehouse', hasWh);
+            WH_TABS.forEach(t => toggleVis(`nav-${t}`, isSuperadmin || whChildAllowed(perms, t)));
+            if (hasWh) toggleWhSubmenu(true);
         }
 
         function removeImage(previewId, hiddenId, fileInputId) {
@@ -5554,6 +5830,508 @@
                     <span class="text-[11px] font-bold text-slate-700 leading-tight">${escapeHTML(item.label)}</span>
                 </a>`).join('');
             openModal('qcMobileMenu');
+        }
+
+        /* ===================== WAREHOUSE (mirror QMS: Transaksi / Ledger / Print DN) =====================
+           Transaksi disimpan di tabel wh_transactions (sheet 'WhTx'), produk & customer dari Master Data.
+           Stok = Qty Stok di Master Produk (saldo awal) + total Inbound - total Outbound. */
+        const WH_TABS = ['wh-transaksi', 'wh-ledger', 'wh-printdn'];
+
+        // Izin 'warehouse' = saklar induk; tanpa sub-izin sama sekali -> semua sub-menu tampil
+        function whChildAllowed(perms, tabId) {
+            const p = perms || [];
+            if (!p.includes('warehouse')) return false;
+            return WH_TABS.some(t => p.includes(t)) ? p.includes(tabId) : true;
+        }
+
+        function toggleWhSubmenu(force) {
+            const m = document.getElementById('whSubmenu');
+            const a = document.getElementById('whSubmenuArrow');
+            if (!m) return;
+            const open = force === true ? true : m.classList.contains('hide');
+            m.classList.toggle('hide', !open);
+            if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(-90deg)';
+        }
+
+        const WH_MOBILE_ITEMS = [
+            { tab: 'wh-transaksi', icon: 'fa-right-left', label: 'Transaksi', color: 'bg-emerald-50 text-emerald-600' },
+            { tab: 'wh-ledger', icon: 'fa-file-invoice', label: 'Report Detail', color: 'bg-indigo-50 text-indigo-600' },
+            { tab: 'wh-printdn', icon: 'fa-print', label: 'Print DN', color: 'bg-blue-50 text-blue-600' }
+        ];
+
+        function openWhMobileMenu() {
+            const list = document.getElementById('whMobileMenuList');
+            if (!list) return;
+            const u = APP_STATE.currentUser || {};
+            const perms = normalizePermissions(u.permissions, u.role) || [];
+            const tampil = WH_MOBILE_ITEMS.filter(item => u.role === 'superadmin' || whChildAllowed(perms, item.tab));
+            list.innerHTML = tampil.map(item => `
+                <a href="?tab=${item.tab}" onclick="closeModal('whMobileMenu'); navigateTab(event, '${item.tab}');" class="flex items-center gap-2 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.color}"><i class="fas ${item.icon} text-xs"></i></span>
+                    <span class="text-[11px] font-bold text-slate-700 leading-tight">${escapeHTML(item.label)}</span>
+                </a>`).join('');
+            openModal('whMobileMenu');
+        }
+
+        const whNum = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+        const whFmt = v => whNum(v).toLocaleString('id-ID');
+        const whKey = v => String(v || '').trim().toUpperCase();
+        const whToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+        const whDateDisp = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : (v || '-'); };
+        const whVal = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+
+        function whProducts() { return [...MP_DATA].sort((a, b) => String(a.partNo || '').localeCompare(String(b.partNo || ''))); }
+        function whFindProduct(partNo) { const k = whKey(partNo); return MP_DATA.find(p => whKey(p.partNo) === k); }
+        function whOpening(partNo) { const p = whFindProduct(partNo); return p ? whNum(p.currentStock) : 0; }
+        function whStock(partNo) {
+            const k = whKey(partNo);
+            return WH_DATA.reduce((s, t) => whKey(t.partNo) === k ? s + (t.type === 'IN' ? whNum(t.qty) : -whNum(t.qty)) : s, whOpening(partNo));
+        }
+        function whSortTx(list) {
+            return list.sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')) || String(a.id || '').localeCompare(String(b.id || '')));
+        }
+
+        function whFillCustomerSelects() {
+            const names = [...new Set(MC_DATA.map(c => String(c.name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+            const opts = names.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
+            document.querySelectorAll('.wh-cust-select').forEach(sel => {
+                const keep = sel.value;
+                sel.innerHTML = `<option value="">${sel.id === 'whLedgerCustomer' ? '-- Semua Customer --' : '-- Pilih Customer --'}</option>` + opts;
+                if (names.includes(keep)) sel.value = keep;
+            });
+        }
+
+        function whProductOptions(placeholder) {
+            return `<option value="">${placeholder || '-- Pilih Produk --'}</option>` + whProducts()
+                .filter(p => String(p.partNo || '').trim())
+                .map(p => `<option value="${escapeHTML(p.partNo)}">${escapeHTML(p.partNo)} - ${escapeHTML(p.partName || '')}</option>`).join('');
+        }
+
+        /* ---------- Transaksi: baris multi-produk ---------- */
+        function whAddTxRow(containerId, partNo, qty) {
+            const c = document.getElementById(containerId);
+            if (!c) return;
+            const row = document.createElement('div');
+            row.className = 'wh-tx-row flex flex-wrap gap-2 items-center';
+            row.innerHTML = `
+                <select class="wh-tx-part flex-1 min-w-[180px] text-[0.7rem] font-mono font-medium border border-slate-200 rounded-lg px-2 py-2 bg-white outline-none focus:border-blue-500" onchange="whRowStock(this)">${whProductOptions()}</select>
+                <span class="wh-tx-stock text-[10px] font-bold text-slate-400 w-24 text-right whitespace-nowrap">Stok: -</span>
+                <input type="number" class="wh-tx-qty w-24 text-xs font-mono border border-slate-200 rounded-lg px-2 py-2 bg-white text-center outline-none focus:border-blue-500" min="1" step="1" placeholder="Qty (Pcs)">
+                <button type="button" onclick="whRemoveTxRow(this)" class="text-slate-400 hover:text-red-500 px-2 py-2 bg-white border border-slate-200 rounded-lg shadow-sm" title="Hapus Baris"><i class="fas fa-trash-can"></i></button>`;
+            c.appendChild(row);
+            const sel = row.querySelector('.wh-tx-part');
+            if (partNo) sel.value = partNo;
+            if (qty) row.querySelector('.wh-tx-qty').value = qty;
+            whRowStock(sel);
+        }
+
+        function whRemoveTxRow(btn) {
+            const r = btn.closest('.wh-tx-row');
+            if (r.parentElement.children.length > 1) { r.remove(); return; }
+            r.querySelector('.wh-tx-part').value = '';
+            r.querySelector('.wh-tx-qty').value = '';
+            whRowStock(r.querySelector('.wh-tx-part'));
+        }
+
+        function whRowStock(sel) {
+            const out = sel.closest('.wh-tx-row').querySelector('.wh-tx-stock');
+            if (!sel.value) { out.textContent = 'Stok: -'; out.className = 'wh-tx-stock text-[10px] font-bold text-slate-400 w-24 text-right whitespace-nowrap'; return; }
+            const st = whStock(sel.value);
+            out.textContent = 'Stok: ' + whFmt(st);
+            out.className = 'wh-tx-stock text-[10px] font-bold w-24 text-right whitespace-nowrap ' + (st <= 0 ? 'text-red-600' : 'text-emerald-600');
+        }
+
+        function whImportCSV(e, containerId) {
+            const file = e.target.files && e.target.files[0];
+            e.target.value = '';
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const lines = String(ev.target.result || '').replace(/^\uFEFF/, '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                const items = [], unknown = [];
+                lines.forEach((line, i) => {
+                    const cols = line.split(/[;,]/).map(s => s.replace(/^"|"$/g, '').trim());
+                    const qty = parseInt(cols[1], 10);
+                    if (i === 0 && !Number.isFinite(qty)) return;   // baris judul
+                    const p = whFindProduct(cols[0]);
+                    if (!p) { if (cols[0]) unknown.push(cols[0]); return; }
+                    if (Number.isFinite(qty) && qty > 0) items.push({ partNo: p.partNo, qty });
+                });
+                if (!items.length) { showToast('Tidak ada baris valid. Format CSV: part_no, qty (Part No harus ada di Master Produk).', 'error'); return; }
+                const c = document.getElementById(containerId);
+                [...c.querySelectorAll('.wh-tx-row')].forEach(r => { if (!r.querySelector('.wh-tx-part').value) r.remove(); });
+                items.forEach(it => whAddTxRow(containerId, it.partNo, it.qty));
+                showToast(`${items.length} baris diimpor${unknown.length ? `, ${unknown.length} Part No tidak dikenal dilewati` : ''}.`, unknown.length ? 'info' : 'success');
+            };
+            reader.readAsText(file);
+        }
+
+        function whProcessTx(e, type) {
+            if (e) e.preventDefault();
+            const pre = type === 'IN' ? 'whIn' : 'whOut';
+            const date = whVal(pre + 'Date');
+            const customer = whVal(pre + 'Customer');
+            const note = sanitizeInput(whVal(pre + 'Note'));
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { showToast('Tanggal transaksi wajib diisi!', 'error'); return; }
+
+            const merged = {};
+            for (const r of document.querySelectorAll(`#${pre}Rows .wh-tx-row`)) {
+                const partNo = r.querySelector('.wh-tx-part').value;
+                const qtyRaw = r.querySelector('.wh-tx-qty').value.trim();
+                if (!partNo && !qtyRaw) continue;
+                if (!partNo) { showToast('Pilih produk pada setiap baris yang diisi Qty!', 'error'); return; }
+                const qty = Number(qtyRaw);
+                if (!Number.isInteger(qty) || qty < 1) { showToast(`Qty untuk ${partNo} harus bilangan bulat minimal 1!`, 'error'); return; }
+                merged[partNo] = (merged[partNo] || 0) + qty;
+            }
+            const entries = Object.entries(merged);
+            if (!entries.length) { showToast('Isi minimal satu baris produk beserta Qty!', 'error'); return; }
+            if (type === 'OUT') {
+                for (const [pn, q] of entries) {
+                    const st = whStock(pn);
+                    if (q > st) { showToast(`Stok ${pn} tidak cukup! Tersedia ${whFmt(st)}, diminta ${whFmt(q)}.`, 'error'); return; }
+                }
+            }
+
+            const pic = (APP_STATE.currentUser || {}).name || 'User';
+            const base = Date.now();
+            const createdAt = new Date().toISOString();
+            entries.forEach(([pn, q], i) => {
+                const p = whFindProduct(pn);
+                const rec = { id: `WH-${base}-${i}`, type, date, customer, partNo: pn, partName: p ? (p.partName || '') : '', qty: q, note, pic, createdAt };
+                WH_DATA.push(rec);
+                syncToSheet('WhTx', rec);
+            });
+            persistData();
+
+            document.getElementById(pre + 'Note').value = '';
+            document.getElementById(pre + 'Customer').value = '';
+            document.getElementById(pre + 'Rows').innerHTML = '';
+            whAddTxRow(pre + 'Rows');
+            renderWhTransaksi();
+            showToast(`${type === 'IN' ? 'Inbound' : 'Outbound'} ${entries.length} item berhasil diproses.`, 'success');
+        }
+
+        function renderWhTransaksi() {
+            whFillCustomerSelects();
+            ['whInDate', 'whOutDate'].forEach(id => { const el = document.getElementById(id); if (el && !el.value) el.value = whToday(); });
+            ['whInRows', 'whOutRows'].forEach(id => {
+                const c = document.getElementById(id);
+                if (!c) return;
+                if (!c.children.length) { whAddTxRow(id); return; }
+                c.querySelectorAll('.wh-tx-part').forEach(sel => { const v = sel.value; sel.innerHTML = whProductOptions(); sel.value = v; whRowStock(sel); });
+            });
+
+            const today = whToday();
+            const sumToday = type => WH_DATA.filter(t => t.type === type && String(t.date || '').slice(0, 10) === today).reduce((s, t) => s + whNum(t.qty), 0);
+            const belowMin = MP_DATA.filter(p => String(p.partNo || '').trim() && whStock(p.partNo) < whNum(p.minStock)).length;
+            const stat = (icon, color, label, value) => `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center ${color}"><i class="fas ${icon}"></i></div>
+                    <div><div class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">${label}</div><div class="text-lg font-extrabold text-slate-800">${value}</div></div>
+                </div>`;
+            const statsEl = document.getElementById('whTxStats');
+            if (statsEl) statsEl.innerHTML =
+                stat('fa-box-open', 'bg-blue-50 text-blue-600', 'Total SKU', whFmt(MP_DATA.length)) +
+                stat('fa-arrow-down', 'bg-emerald-50 text-emerald-600', 'Inbound Hari Ini', whFmt(sumToday('IN'))) +
+                stat('fa-arrow-up', 'bg-orange-50 text-orange-600', 'Outbound Hari Ini', whFmt(sumToday('OUT'))) +
+                stat('fa-triangle-exclamation', 'bg-red-50 text-red-600', 'Di Bawah Min Stok', whFmt(belowMin));
+
+            const body = document.getElementById('whRecentBody');
+            if (!body) return;
+            const recent = [...WH_DATA].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')) || String(b.id || '').localeCompare(String(a.id || ''))).slice(0, 10);
+            body.innerHTML = recent.length === 0
+                ? '<tr><td colspan="7" class="text-center text-slate-400 font-semibold py-6">Belum ada transaksi gudang.</td></tr>'
+                : recent.map(t => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-2 py-2 font-mono whitespace-nowrap">${escapeHTML(whDateDisp(t.date))}</td>
+                        <td class="px-2 py-2">${t.type === 'IN' ? '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold text-[10px]">INBOUND</span>' : '<span class="px-2 py-0.5 rounded bg-orange-100 text-orange-700 font-bold text-[10px]">OUTBOUND</span>'}</td>
+                        <td class="px-2 py-2 font-mono font-bold text-slate-700">${escapeHTML(t.partNo || '-')}</td>
+                        <td class="px-2 py-2 text-slate-600">${escapeHTML(t.partName || '-')}</td>
+                        <td class="px-2 py-2 text-slate-600">${escapeHTML(t.customer || '-')}</td>
+                        <td class="px-2 py-2 text-right font-mono font-bold">${whFmt(t.qty)}</td>
+                        <td class="px-2 py-2 text-slate-500">${escapeHTML(t.pic || '-')}</td>
+                    </tr>`).join('');
+        }
+
+        /* ---------- Report Detail (Ledger) ---------- */
+        function whFillLedgerProducts() {
+            const sel = document.getElementById('whLedgerProduct');
+            if (!sel) return;
+            const keep = sel.value;
+            const cust = whVal('whLedgerCustomer');
+            const list = whProducts().filter(p => String(p.partNo || '').trim() && (!cust || whKey(p.customerName) === whKey(cust)));
+            sel.innerHTML = '<option value="">-- Semua Produk --</option>' + list
+                .map(p => `<option value="${escapeHTML(p.partNo)}">${escapeHTML(p.partNo)} - ${escapeHTML(p.partName || '')}</option>`).join('');
+            if (list.some(p => p.partNo === keep)) sel.value = keep;
+        }
+
+        function whLedgerData() {
+            const partNo = whVal('whLedgerProduct'), from = whVal('whLedgerFrom'), to = whVal('whLedgerTo'), cust = whVal('whLedgerCustomer');
+            const allowed = cust ? new Set(MP_DATA.filter(p => whKey(p.customerName) === whKey(cust)).map(p => whKey(p.partNo))) : null;
+            const txs = whSortTx(WH_DATA.filter(t => partNo ? whKey(t.partNo) === whKey(partNo) : (!allowed || allowed.has(whKey(t.partNo)))));
+            const bal = {};
+            let opening = partNo ? whOpening(partNo) : 0, totIn = 0, totOut = 0;
+            const rows = [];
+            txs.forEach(t => {
+                const k = whKey(t.partNo);
+                if (!(k in bal)) bal[k] = whOpening(t.partNo);
+                const q = whNum(t.qty), delta = t.type === 'IN' ? q : -q, d = String(t.date || '').slice(0, 10);
+                bal[k] += delta;
+                if (from && d < from) { opening += delta; return; }
+                if (to && d > to) return;
+                if (t.type === 'IN') totIn += q; else totOut += q;
+                rows.push({ t, inQ: t.type === 'IN' ? q : 0, outQ: t.type === 'IN' ? 0 : q, bal: bal[k] });
+            });
+            const product = partNo ? whFindProduct(partNo) : null;
+            return { partNo, product, from, to, cust, rows, opening, totIn, totOut, closing: opening + totIn - totOut };
+        }
+
+        const whLedgerDesc = t => t.type === 'IN' ? 'Goods Receipt' : 'Goods Issue';
+        const whLedgerNote = (t, withPart) => [withPart ? `${t.partNo || ''} - ${t.partName || ''}` : '', t.customer, t.note].filter(Boolean).join(' | ');
+        const whLedgerTitle = L => L.partNo ? `${L.partNo} - ${(L.product && L.product.partName) || ''} ${(L.product && L.product.sizeStr) || ''}`.trim() : `Semua Produk${L.cust ? ' (' + L.cust + ')' : ''}`;
+        const whPeriodText = L => (L.from || L.to) ? `${L.from ? whDateDisp(L.from) : '...'} s/d ${L.to ? whDateDisp(L.to) : '...'}` : 'Semua tanggal';
+
+        function renderWhLedger() {
+            whFillCustomerSelects();
+            whFillLedgerProducts();
+            const body = document.getElementById('whLedgerBody');
+            if (!body) return;
+            const L = whLedgerData();
+            document.getElementById('whLedgerHeader').textContent = ': ' + whLedgerTitle(L);
+            const chip = (label, val, cls) => `<span class="px-2 py-1 rounded-lg border ${cls}">${label}: <b>${whFmt(val)}</b></span>`;
+            document.getElementById('whLedgerSummary').innerHTML = (L.partNo ? chip('Saldo Awal', L.opening, 'bg-slate-50 border-slate-200 text-slate-600') : '') +
+                chip('In', L.totIn, 'bg-emerald-50 border-emerald-200 text-emerald-700') +
+                chip('Out', L.totOut, 'bg-orange-50 border-orange-200 text-orange-700') +
+                (L.partNo ? chip('Saldo Akhir', L.closing, 'bg-indigo-50 border-indigo-200 text-indigo-700') : '');
+            const td = 'border border-slate-300 px-2 py-1.5';
+            const hapus = bolehHapusData();
+            let html = L.partNo ? `<tr class="bg-slate-50"><td class="${td} text-center font-mono">${escapeHTML(whDateDisp(L.from || (L.rows[0] && L.rows[0].t.date) || whToday()))}</td><td class="${td} font-bold text-slate-600">Opening Balance</td><td class="${td}"></td><td class="${td}"></td><td class="${td}"></td><td class="${td} text-right font-bold font-mono">${whFmt(L.opening)}</td><td class="${td}"></td></tr>` : '';
+            html += L.rows.map(({ t, inQ, outQ, bal }) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="${td} text-center font-mono whitespace-nowrap">${escapeHTML(whDateDisp(t.date))}</td>
+                    <td class="${td} font-semibold ${t.type === 'IN' ? 'text-emerald-700' : 'text-orange-700'}">${whLedgerDesc(t)}</td>
+                    <td class="${td} text-slate-600">${escapeHTML(whLedgerNote(t, !L.partNo) || '-')}<span class="block text-[10px] text-slate-400">PIC: ${escapeHTML(t.pic || '-')}</span></td>
+                    <td class="${td} text-right font-mono">${inQ ? whFmt(inQ) : ''}</td>
+                    <td class="${td} text-right font-mono">${outQ ? whFmt(outQ) : ''}</td>
+                    <td class="${td} text-right font-mono font-bold ${bal < 0 ? 'text-red-600' : ''}">${whFmt(bal)}</td>
+                    <td class="${td} text-center">${hapus ? `<button type="button" onclick="triggerDelete('wh-tx', '${jsStr(t.id)}')" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus transaksi"><i class="fas fa-trash"></i></button>` : ''}</td>
+                </tr>`).join('');
+            if (!L.rows.length) html += `<tr><td colspan="7" class="${td} text-center text-slate-400 font-semibold py-6">Tidak ada transaksi pada filter ini.</td></tr>`;
+            else html += `<tr class="bg-slate-100 font-bold"><td colspan="3" class="${td} text-right">TOTAL</td><td class="${td} text-right font-mono">${whFmt(L.totIn)}</td><td class="${td} text-right font-mono">${whFmt(L.totOut)}</td><td class="${td} text-right font-mono">${L.partNo ? whFmt(L.closing) : ''}</td><td class="${td}"></td></tr>`;
+            body.innerHTML = html;
+        }
+
+        function exportWhLedgerCSV() {
+            const L = whLedgerData();
+            if (!L.rows.length) { showToast('Tidak ada data untuk diekspor pada filter ini.', 'error'); return; }
+            const data = [['Tanggal', 'Description', 'Part No', 'Part Name', 'Customer', 'Note', 'In', 'Out', 'Quantity', 'PIC']];
+            if (L.partNo) data.push([escapeCSVField(L.from || ''), 'Opening Balance', escapeCSVField(L.partNo), escapeCSVField((L.product && L.product.partName) || ''), '', '', '', '', String(L.opening), '']);
+            L.rows.forEach(({ t, inQ, outQ, bal }) => data.push([
+                escapeCSVField(String(t.date || '').slice(0, 10)), whLedgerDesc(t), escapeCSVField(t.partNo || ''), escapeCSVField(t.partName || ''),
+                escapeCSVField(t.customer || ''), escapeCSVField(t.note || ''), String(inQ || ''), String(outQ || ''), String(bal), escapeCSVField(t.pic || '')
+            ]));
+            data.push(['', 'TOTAL', '', '', '', '', String(L.totIn), String(L.totOut), L.partNo ? String(L.closing) : '', '']);
+            exportToCSV(`Report_Detail_Warehouse_${L.partNo ? L.partNo.replace(/[^A-Za-z0-9_-]/g, '_') : 'Semua'}_${whToday()}.csv`, data);
+        }
+
+        function whPrintWindow(title, pageCss, bodyHtml) {
+            const w = window.open('', '_blank');
+            if (!w) { showToast('Pop-up diblokir browser! Izinkan pop-up untuk mencetak.', 'error'); return; }
+            w.document.write(`<!DOCTYPE html><html><head><title>${escapeHTML(title)}</title><style>
+                ${pageCss}
+                body { font-family: Arial, Helvetica, sans-serif; color: #000; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            </style></head><body>${bodyHtml}<script>window.onload = function() { setTimeout(function() { window.print(); window.close(); }, 500); };<\/script></body></html>`);
+            w.document.close();
+        }
+
+        function printWhLedger() {
+            const L = whLedgerData();
+            const c = 'border:1px solid #000;padding:3px 6px;';
+            let rows = L.partNo ? `<tr><td style="${c}text-align:center">${escapeHTML(whDateDisp(L.from || (L.rows[0] && L.rows[0].t.date) || whToday()))}</td><td style="${c}font-weight:bold">Opening Balance</td><td style="${c}"></td><td style="${c}"></td><td style="${c}"></td><td style="${c}text-align:right;font-weight:bold">${whFmt(L.opening)}</td></tr>` : '';
+            rows += L.rows.map(({ t, inQ, outQ, bal }) => `<tr><td style="${c}text-align:center;white-space:nowrap">${escapeHTML(whDateDisp(t.date))}</td><td style="${c}">${whLedgerDesc(t)}</td><td style="${c}">${escapeHTML(whLedgerNote(t, !L.partNo))}</td><td style="${c}text-align:right">${inQ ? whFmt(inQ) : ''}</td><td style="${c}text-align:right">${outQ ? whFmt(outQ) : ''}</td><td style="${c}text-align:right;font-weight:bold">${whFmt(bal)}</td></tr>`).join('');
+            if (!L.rows.length) rows += `<tr><td colspan="6" style="${c}text-align:center">Tidak ada transaksi pada filter ini.</td></tr>`;
+            rows += `<tr style="font-weight:bold;background:#f1f5f9"><td colspan="3" style="${c}text-align:right">TOTAL</td><td style="${c}text-align:right">${whFmt(L.totIn)}</td><td style="${c}text-align:right">${whFmt(L.totOut)}</td><td style="${c}text-align:right">${L.partNo ? whFmt(L.closing) : ''}</td></tr>`;
+            const th = `${c}background:#f1f5f9;text-align:left`;
+            whPrintWindow('Report Detail Warehouse', '@page { size: A4 landscape; margin: 10mm; }', `
+                <div style="font-size:11px">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5px solid #000;padding-bottom:4px;margin-bottom:8px">
+                        <div><div style="font-size:15px;font-weight:bold">Ledger Detail — Laporan Mutasi Stok</div><div>PT Sadikun Niagamas Raya</div></div>
+                        <div style="text-align:right">Dicetak: ${escapeHTML(whDateDisp(whToday()))}</div>
+                    </div>
+                    <div style="margin-bottom:2px"><b style="display:inline-block;width:80px">Product</b>: ${escapeHTML(whLedgerTitle(L))}</div>
+                    <div style="margin-bottom:8px"><b style="display:inline-block;width:80px">Periode</b>: ${escapeHTML(whPeriodText(L))}</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:10.5px">
+                        <thead><tr><th style="${th}width:80px;text-align:center">Date</th><th style="${th}width:110px">Description</th><th style="${th}">Note</th><th style="${th}width:70px;text-align:right">In</th><th style="${th}width:70px;text-align:right">Out</th><th style="${th}width:80px;text-align:right">Quantity</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>`);
+        }
+
+        /* ---------- Print DN (Surat Jalan / Delivery Order) ---------- */
+        function whDnAddRow(partNo, partName, qty, uom, ket) {
+            const c = document.getElementById('whDnRows');
+            if (!c) return;
+            const row = document.createElement('div');
+            row.className = 'wh-dn-row relative bg-white p-2 pr-9 border border-slate-200 rounded-lg space-y-1.5';
+            const inp = 'text-xs border border-slate-200 rounded px-2 py-1.5 outline-none focus:border-blue-500';
+            row.innerHTML = `
+                <select class="wh-dn-pick w-full text-[0.7rem] border border-slate-200 rounded px-2 py-1.5 bg-slate-50 font-medium text-slate-700" onchange="whDnPickProduct(this)">${whProductOptions('-- Auto Fill Produk --')}</select>
+                <div class="flex gap-1.5">
+                    <input type="text" class="wh-dn-no ${inp} flex-1 min-w-0 font-mono" maxlength="60" placeholder="Part No" oninput="renderWhDnPreview()">
+                    <input type="text" class="wh-dn-name ${inp} flex-1 min-w-0" maxlength="120" placeholder="Part Name" oninput="renderWhDnPreview()">
+                </div>
+                <div class="flex gap-1.5">
+                    <input type="number" class="wh-dn-qty ${inp} w-16 text-center font-bold bg-blue-50" min="0" placeholder="QTY" oninput="renderWhDnPreview()">
+                    <input type="text" class="wh-dn-uom ${inp} w-16 text-center" maxlength="10" placeholder="UoM" oninput="renderWhDnPreview()">
+                    <input type="text" class="wh-dn-ket ${inp} flex-1 min-w-0" maxlength="60" placeholder="Keterangan (ex: 12 DOOS)" oninput="renderWhDnPreview()">
+                </div>
+                <button type="button" onclick="whDnRemoveRow(this)" class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-red-500 p-1.5 rounded hover:bg-red-50" title="Hapus"><i class="fas fa-trash-can"></i></button>`;
+            c.appendChild(row);
+            row.querySelector('.wh-dn-no').value = partNo || '';
+            row.querySelector('.wh-dn-name').value = partName || '';
+            row.querySelector('.wh-dn-qty').value = qty || '';
+            row.querySelector('.wh-dn-uom').value = uom || 'BTL';
+            row.querySelector('.wh-dn-ket').value = ket || '';
+            renderWhDnPreview();
+        }
+
+        function whDnRemoveRow(btn) {
+            const r = btn.closest('.wh-dn-row');
+            if (r.parentElement.children.length > 1) r.remove();
+            else r.querySelectorAll('input').forEach(i => { i.value = i.classList.contains('wh-dn-uom') ? 'BTL' : ''; });
+            renderWhDnPreview();
+        }
+
+        function whDnPickProduct(sel) {
+            const p = whFindProduct(sel.value);
+            const r = sel.closest('.wh-dn-row');
+            if (p) {
+                r.querySelector('.wh-dn-no').value = p.partNo || '';
+                r.querySelector('.wh-dn-name').value = `${p.partName || ''}${p.sizeStr ? ' ' + p.sizeStr : ''}`.trim();
+            }
+            renderWhDnPreview();
+        }
+
+        function whDnPickCustomer() {
+            const name = whVal('whDnCustomer');
+            const c = MC_DATA.find(x => String(x.name || '') === name);
+            document.getElementById('whDnToName').value = c ? (c.name || '') : '';
+            document.getElementById('whDnToAddress').value = c ? (c.address || '') : '';
+            renderWhDnPreview();
+        }
+
+        function whDnAutoNo() {
+            const d = new Date();
+            const rom = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'][d.getMonth()];
+            const no = `${Math.floor(Math.random() * 9000) + 10000}/SNR/CBT/${rom}/${d.getFullYear()}`;
+            document.getElementById('whDnNo').value = no;
+            renderWhDnPreview();
+            showToast('Nomor DN dihasilkan: ' + no, 'success');
+        }
+
+        // Isi item DN dari transaksi Outbound pada tanggal cetak (+ customer bila dipilih)
+        function whDnFromOutbound() {
+            const date = whVal('whDnDate'), cust = whVal('whDnCustomer');
+            const list = whSortTx(WH_DATA.filter(t => t.type === 'OUT' && String(t.date || '').slice(0, 10) === date && (!cust || whKey(t.customer) === whKey(cust))));
+            if (!list.length) { showToast(`Tidak ada transaksi Outbound${cust ? ' untuk ' + cust : ''} pada ${whDateDisp(date)}.`, 'error'); return; }
+            const merged = {};
+            list.forEach(t => {
+                const k = whKey(t.partNo);
+                if (!merged[k]) merged[k] = { partNo: t.partNo, partName: t.partName, qty: 0 };
+                merged[k].qty += whNum(t.qty);
+            });
+            document.getElementById('whDnRows').innerHTML = '';
+            Object.values(merged).forEach(m => {
+                const p = whFindProduct(m.partNo);
+                whDnAddRow(m.partNo, p ? `${p.partName || ''}${p.sizeStr ? ' ' + p.sizeStr : ''}`.trim() : m.partName, m.qty);
+            });
+            showToast(`${Object.keys(merged).length} item diambil dari transaksi Outbound.`, 'success');
+        }
+
+        function whDnItems() {
+            return [...document.querySelectorAll('#whDnRows .wh-dn-row')].map(r => ({
+                no: r.querySelector('.wh-dn-no').value.trim(),
+                name: r.querySelector('.wh-dn-name').value.trim(),
+                qty: r.querySelector('.wh-dn-qty').value.trim(),
+                uom: r.querySelector('.wh-dn-uom').value.trim(),
+                ket: r.querySelector('.wh-dn-ket').value.trim()
+            })).filter(i => i.no || i.name || i.qty);
+        }
+
+        function whDnHtml() {
+            const e = v => escapeHTML(String(v || ''));
+            const items = whDnItems();
+            const cell = 'border:1px solid #000;padding:3px 4px;';
+            const minRows = Math.max(items.length, 6);
+            let rows = '';
+            for (let i = 0; i < minRows; i++) {
+                const it = items[i];
+                rows += it
+                    ? `<tr><td style="${cell}text-align:center">${i + 1}</td><td style="${cell}font-family:monospace">${e(it.no)}</td><td style="${cell}">${e(it.name)}</td><td style="${cell}text-align:center;font-weight:bold">${it.qty !== '' ? e(whFmt(it.qty)) : ''}</td><td style="${cell}text-align:center">${e(it.uom)}</td><td style="${cell}">${e(it.ket)}</td></tr>`
+                    : `<tr><td style="${cell}height:14px"></td><td style="${cell}"></td><td style="${cell}"></td><td style="${cell}"></td><td style="${cell}"></td><td style="${cell}"></td></tr>`;
+            }
+            const total = items.reduce((s, it) => s + whNum(it.qty), 0);
+            const th = `${cell}text-align:center;font-weight:bold`;
+            const sign = (label, nameHtml, extra, w) => `<div style="width:${w};display:flex;flex-direction:column;align-items:center"><span style="margin-bottom:38px">${label}</span><span style="width:100%;text-align:center;font-weight:600">${nameHtml}</span>${extra ? `<span style="font-size:8px;width:100%;margin-top:3px;line-height:1.3">${extra}</span>` : ''}</div>`;
+            const dots = '(...........................................)';
+            return `<div style="width:210mm;min-height:148.5mm;box-sizing:border-box;padding:6mm 7mm;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#000;display:flex;flex-direction:column;background:#fff">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1.5px solid #000;padding-bottom:3px;margin-bottom:3px">
+                    <div style="line-height:1.35"><div style="font-weight:bold;font-size:12px">PT Sadikun Niagamas Raya</div><div>Jl. Pinangsia Timur 4A - Jakarta 11110</div><div>Telp (62-21) 6297880 &nbsp; FAX.(62-21) 6598508</div></div>
+                    <div style="line-height:1.35;text-align:right;font-size:12px"><div style="font-weight:bold">Surat Jalan</div><div>Delivery Order</div><div style="font-weight:600;margin-top:2px">${e(whDateDisp(whVal('whDnDate')))}</div></div>
+                </div>
+                <div style="text-align:center;font-weight:bold;font-size:14px;margin-bottom:3px">GROUP : ${e(whVal('whDnGroup').toUpperCase())}</div>
+                <div style="border-top:1px solid #999;margin-bottom:4px"></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;line-height:1.35">
+                    <div style="width:50%;padding-right:8px"><div style="font-weight:bold">Kepada :</div><div style="font-weight:600;text-transform:uppercase;min-height:14px">${e(whVal('whDnToName'))}</div><div style="min-height:14px;white-space:pre-line">${e(whVal('whDnToAddress'))}</div></div>
+                    <div style="width:50%;padding-left:8px">
+                        <div style="text-align:right"><b style="margin-right:6px">NO :</b><span style="display:inline-block;width:190px;text-align:left;font-weight:600;text-transform:uppercase">${e(whVal('whDnNo'))}</span></div>
+                        <div style="text-align:right"><b style="margin-right:6px">PO.FO No :</b><span style="display:inline-block;width:190px;text-align:left;font-weight:600;text-transform:uppercase">${e(whVal('whDnPoNo'))}</span></div>
+                        <div style="text-align:right"><b style="margin-right:6px">PO Date :</b><span style="display:inline-block;width:190px;text-align:left;font-weight:600">${whVal('whDnPoDate') ? e(whDateDisp(whVal('whDnPoDate'))) : ''}</span></div>
+                    </div>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:3px">
+                    <thead><tr><th style="${th}width:26px">No</th><th style="${th}width:120px">PART NO</th><th style="${th}">PART NAME</th><th style="${th}width:52px">QTY</th><th style="${th}width:44px">Uom</th><th style="${th}width:120px">KETERANGAN</th></tr></thead>
+                    <tbody>${rows}<tr><td colspan="3" style="${cell}text-align:right;font-weight:bold">TOTAL</td><td style="${cell}text-align:center;font-weight:bold">${total ? whFmt(total) : ''}</td><td style="${cell}"></td><td style="${cell}"></td></tr></tbody>
+                </table>
+                <div style="font-size:10px;line-height:1.35;padding-top:2px;margin-bottom:10px;display:flex"><div style="width:72px">Keterangan :</div><div><div>1. Barang diterima dalam keadaan baik dan cukup.</div><div>2. Periksa dengan teliti sebelum barang turun.</div></div></div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;text-align:center;margin-top:auto">
+                    ${sign('Yang Menerima Barang', dots, 'paraf, nama jelas &amp; stempel perusahaan', '22%')}
+                    ${sign('Yang Menyerahkan', dots, 'NO POL : ..................<br>Jam Datang : ..............<br>Jam Keluar : ...............', '22%')}
+                    ${sign('Diperiksa', '( ' + (e(whVal('whDnPicCek')) || '.................') + ' )', '', '16%')}
+                    ${sign('Mengetahui', '(.........................)', '', '16%')}
+                    ${sign('Dibuat', '( ' + (e(whVal('whDnPicBuat')) || '.................') + ' )', '', '16%')}
+                </div>
+            </div>`;
+        }
+
+        function renderWhDnPreview() {
+            const el = document.getElementById('whDnPreview');
+            if (el) el.innerHTML = whDnHtml();
+        }
+
+        function renderWhPrintDn() {
+            const custSel = document.getElementById('whDnCustomer');
+            if (custSel) {
+                const keep = custSel.value;
+                const names = [...new Set(MC_DATA.map(c => String(c.name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+                custSel.innerHTML = '<option value="">-- Ketik Manual atau Pilih Customer --</option>' + names.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
+                if (names.includes(keep)) custSel.value = keep;
+            }
+            const dateEl = document.getElementById('whDnDate');
+            if (dateEl && !dateEl.value) dateEl.value = whToday();
+            const buat = document.getElementById('whDnPicBuat');
+            if (buat && !buat.value) buat.value = (APP_STATE.currentUser || {}).name || '';
+            const rows = document.getElementById('whDnRows');
+            if (rows && !rows.children.length) whDnAddRow();
+            else if (rows) rows.querySelectorAll('.wh-dn-pick').forEach(sel => { sel.innerHTML = whProductOptions('-- Auto Fill Produk --'); });
+            renderWhDnPreview();
+        }
+
+        function printWhDn() {
+            if (!whDnItems().length) { showToast('Isi minimal satu item barang sebelum mencetak DN!', 'error'); return; }
+            if (!whVal('whDnToName').trim()) { showToast('Nama perusahaan tujuan wajib diisi!', 'error'); return; }
+            whPrintWindow('Surat Jalan ' + whVal('whDnNo'), '@page { size: A5 landscape; margin: 0; }', whDnHtml());
         }
 
         /* ---------- Form pemeriksaan generik (Lab/Patrol/Outgoing/Receiving) ---------- */
@@ -8047,8 +8825,9 @@
             document.getElementById('uId').value = '';
             setPasswordHidden('uPassword', 'eyeIconUser');
             
-            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcScan', 'permRsSupplier', 'permEmpProfile'].forEach(cb => document.getElementById(cb).checked = false);
+            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcScan', 'permRsSupplier', 'permEmpProfile', 'permWarehouse', 'permWhTransaksi', 'permWhLedger', 'permWhPrintdn'].forEach(cb => document.getElementById(cb).checked = false);
             document.getElementById('qcSubPermsBox').classList.add('hide');
+            document.getElementById('whSubPermsBox').classList.add('hide');
 
             if (action === 'create') {
                 document.getElementById('userModalTitle').textContent = 'Tambah User Baru';
@@ -8084,9 +8863,14 @@
                     const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
                     const adaQcSub = Object.keys(qcSubIds).some(t => perms.includes(t));
                     Object.keys(qcSubIds).forEach(t => document.getElementById(qcSubIds[t]).checked = adaQcSub ? perms.includes(t) : true);
+                    if (u.role === 'superadmin' || perms.includes('warehouse')) document.getElementById('permWarehouse').checked = true;
+                    const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn' };
+                    const adaWhSub = Object.keys(whSubIds).some(t => perms.includes(t));
+                    Object.keys(whSubIds).forEach(t => document.getElementById(whSubIds[t]).checked = adaWhSub ? perms.includes(t) : true);
                 }
             }
             document.getElementById('qcSubPermsBox').classList.toggle('hide', !document.getElementById('permGembaQc').checked);
+            document.getElementById('whSubPermsBox').classList.toggle('hide', !document.getElementById('permWarehouse').checked);
             openModal('userModal');
         }
 
@@ -8126,6 +8910,13 @@
                     const ids = Object.keys(qcSubIds);
                     const checked = ids.filter(t => document.getElementById(qcSubIds[t]).checked);
                     if (checked.length > 0 && checked.length < ids.length) checked.forEach(t => permissions.push(t));
+                }
+                if(document.getElementById('permWarehouse').checked) {
+                    permissions.push('warehouse');
+                    const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn' };
+                    const whIds = Object.keys(whSubIds);
+                    const whChecked = whIds.filter(t => document.getElementById(whSubIds[t]).checked);
+                    if (whChecked.length > 0 && whChecked.length < whIds.length) whChecked.forEach(t => permissions.push(t));
                 }
                 if(document.getElementById('permDocument').checked) permissions.push('documents');
             }
@@ -8744,7 +9535,7 @@
                     for (const doc of orphanDocs) await deleteFromSheet('Documents', doc.id);
                     await deleteFromSheet('Folders', id);
                 } else {
-                    const peta = { ticket: 'Tickets', asset: 'Assets', gemba: 'Gemba', 'gemba-qc': 'GembaQc', document: 'Documents', user: 'Users', qc: 'Qc', produk: 'Products', customer: 'Customers' };
+                    const peta = { ticket: 'Tickets', asset: 'Assets', gemba: 'Gemba', 'gemba-qc': 'GembaQc', document: 'Documents', user: 'Users', qc: 'Qc', produk: 'Products', customer: 'Customers', 'wh-tx': 'WhTx' };
                     await deleteFromSheet(peta[type], id);
                 }
             } catch (err) {
@@ -8770,6 +9561,7 @@
             if (type === 'document') DOCUMENTS = DOCUMENTS.filter(x => x.id !== id);
             if (type === 'user') USERS = USERS.filter(x => x.id !== id);
             if (type === 'produk') MP_DATA = MP_DATA.filter(x => x.id !== id);
+            if (type === 'wh-tx') WH_DATA = WH_DATA.filter(x => x.id !== id);
             if (type === 'customer') {
                 // Kaskade (mirror QMS): produk yang memakai customer ini -> customerName dikosongkan
                 const c = MC_DATA.find(x => x.id === id);
@@ -8800,6 +9592,7 @@
             if (type === 'user') renderUsers();
             if (type === 'produk') renderMasterProducts();
             if (type === 'customer') { renderMasterCustomers(); renderMasterProducts(); }
+            if (type === 'wh-tx') { renderWhLedger(); renderWhTransaksi(); }
             renderDashboard();
         }
 
