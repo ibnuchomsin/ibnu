@@ -1,0 +1,22 @@
+# ==== Kredensial & konfigurasi lokal ====
+config.php
+
+# ==== Data user / unggahan (foto, dokumen) ====
+uploads/
+tools/data/
+
+# ==== Sertifikat & kunci ====
+*.crt
+*.key
+*.pem
+
+# ==== Backup & berkas sementara ====
+*.bak
+*.bak-*
+*.log
+*.tmp
+.htaccess.bak-*
+
+# ==== OS ====
+Thumbs.db
+.DS_Store

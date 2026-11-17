@@ -1,0 +1,43 @@
+# KAIZEN API — limit PHP (XAMPP Apache mod_php, AllowOverride All aktif)
+<IfModule mod_php.c>
+    php_value post_max_size 64M
+    php_value upload_max_filesize 16M
+    php_value max_execution_time 120
+    # Jangan bocorkan error/path PHP ke browser
+    php_flag display_errors Off
+    php_flag display_startup_errors Off
+    # Tolak session ID yang tidak pernah dibuat server
+    php_value session.use_strict_mode 1
+</IfModule>
+
+# Paksa HTTPS: http://<ip>/kaizen -> https://<ip>/kaizen
+# (sertifikat SAN mencakup 192.168.1.42 & 10.10.0.236 — redirect memakai HTTP_HOST
+#  jadi bekerja di IP rumah maupun IP kantor tanpa perlu diubah)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# Anti-cache: selama masih sering revisi, HTML wajib selalu termuat terbaru
+# (mencegah browser/PWA menampilkan versi lama meski sudah Ctrl+F5 di HP)
+<IfModule mod_headers.c>
+    Header set Cache-Control "no-store, no-cache, must-revalidate"
+    Header always set Strict-Transport-Security "max-age=31536000"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "same-origin"
+    # camera=(self): menu Scan QR/Barcode memakai getUserMedia, jadi kamera harus
+    # diizinkan untuk origin sendiri (camera=() memblokir total tanpa prompt).
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(self)"
+    # Report-only: memantau pelanggaran CSP tanpa memutus fitur (Tailwind Play dsb.)
+    Header always set Content-Security-Policy-Report-Only "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self' https://wa.me; frame-ancestors 'self'"
+</IfModule>
+
+# Konfigurasi & dokumen internal tidak boleh diakses lewat web
+<FilesMatch "(?i)^(config\.php|auth\.php|readme\.md|.*\.(sql|bak|old|log|ini|env))$">
+    Require all denied
+</FilesMatch>
+
+# Tanpa directory listing (termasuk vendor/, tools/)
+Options -Indexes
