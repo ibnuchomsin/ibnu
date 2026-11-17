@@ -1,0 +1,10 @@
+# Blokir SELURUH akses web ke folder data ini:
+# berisi login_attempts.json (rate limit), mfa_config.php (kredensial SMTP/WA),
+# mfa_debug.log (log uji OTP) dan kredensial backup.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

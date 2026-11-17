@@ -58,6 +58,7 @@ if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0775, true);
  * SESSION AUTH
  * ------------------------------------------------------------ */
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/mfa.php';   // MFA / verifikasi dua langkah (OTP email & WhatsApp)
 @ini_set('display_errors', '0');   // jangan bocorkan error PHP ke output JSON
 kaizenSessionStart();
 
@@ -589,6 +590,44 @@ case 'login': {
     }
 
     loginClearFailures($usernameKey, $clientIp);
+
+    /* ---- MFA: password benar -> cek verifikasi dua langkah (OTP) ----
+       Bila MFA diaktifkan utk user ini DAN perangkat belum terpercaya,
+       sesi login PENUH belum dibuat: kirim kode & minta verifikasi dulu. */
+    kaizenMfaCleanup($DB);
+    $mfaSet = kaizenMfaSettings($DB, $user['id']);
+    if (!empty($mfaSet['enabled']) && !kaizenMfaTrustedDevice($DB, $user['id'])) {
+        $mfaCh = kaizenMfaChannelsFor($mfaSet);
+        if (empty($mfaCh['allowed'])) {
+            // MFA aktif tapi target kosong (mis. data user dihapus): jangan kunci akun,
+            // lanjut login penuh & catat agar admin memperbaiki di Kelola Akun.
+            kaizenMfaDebugLog('MFA aktif tapi target kosong utk user ' . $user['username'] . ' -> login tanpa OTP');
+        } else {
+            $mfaChannel = (string)($body['mfaChannel'] ?? '');
+            if (!in_array($mfaChannel, $mfaCh['allowed'], true)) $mfaChannel = $mfaCh['default'];
+            $mfaTarget = kaizenMfaTargetFor($mfaSet, $mfaChannel);
+            session_regenerate_id(true);
+            $_SESSION['mfa_uid']   = $user['id'];
+            $_SESSION['mfa_token'] = bin2hex(random_bytes(16));
+            $_SESSION['mfa_time']  = time();
+            $issued = kaizenMfaIssueCode($DB, $user['id'], $mfaChannel, $mfaTarget, kaizenMfaConfig(), $user['name']);
+            if (!$issued['ok']) {
+                unset($_SESSION['mfa_uid'], $_SESSION['mfa_token'], $_SESSION['mfa_time']);
+                fail($issued['error'], 502);
+            }
+            respond([
+                'ok'          => true,
+                'requiresMfa' => true,
+                'mfaToken'    => $_SESSION['mfa_token'],
+                'channel'     => $issued['channel'],
+                'channels'    => $mfaCh['allowed'],
+                'target'      => $issued['target'],
+                'ttl'         => $issued['ttl'],
+                'message'     => 'Kode verifikasi dikirim ke ' . $issued['target'],
+            ]);
+        }
+    }
+
     session_regenerate_id(true);
     $_SESSION['kaizen_user_id'] = $user['id'];
     $_SESSION['kaizen_username'] = $user['username'];
@@ -643,6 +682,222 @@ case 'session': {
 /* ------------------------------------------------------------
  * 2. logout
  * ------------------------------------------------------------ */
+/* ------------------------------------------------------------
+ * 1c. mfa_send — kirim ulang / ganti channel kode OTP
+ *     (masih dalam sesi verifikasi pending, bukan sesi login)
+ * ------------------------------------------------------------ */
+case 'mfa_send': {
+    $uid = kaizenMfaPendingUser();
+    if (!$uid) fail('Sesi verifikasi tidak ditemukan / kedaluwarsa. Silakan login ulang.', 401);
+    if (!hash_equals(kaizenMfaPendingToken(), (string)($body['mfaToken'] ?? ''))) fail('Token verifikasi tidak sah.', 403);
+
+    $st = $DB->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+    $st->bind_param('s', $uid);
+    $st->execute();
+    $user = $st->get_result()->fetch_assoc();
+    $st->close();
+    if (!$user || $user['status'] !== 'Aktif') {
+        unset($_SESSION['mfa_uid'], $_SESSION['mfa_token'], $_SESSION['mfa_time']);
+        fail('Akun tidak tersedia.', 403);
+    }
+
+    $set   = kaizenMfaSettings($DB, $uid);
+    $mfaCh = kaizenMfaChannelsFor($set);
+    $channel = (string)($body['channel'] ?? '');
+    if (!in_array($channel, $mfaCh['allowed'], true)) $channel = $mfaCh['default'];
+    $target = kaizenMfaTargetFor($set, $channel);
+    if ($target === '') fail('Target pengiriman tidak tersedia. Hubungi admin.', 400);
+
+    // Rate limit pengiriman ulang
+    $cfg      = kaizenMfaConfig();
+    $cooldown = max(5, (int)$cfg['resend_cooldown_seconds']);
+    $q = $DB->query('SELECT channel, created_at FROM mfa_codes WHERE user_id = ' . "'" . $DB->real_escape_string($uid) . "'" . ' ORDER BY id DESC LIMIT 1');
+    $last = $q ? $q->fetch_assoc() : null;
+    if ($q) $q->close();
+    if ($last) {
+        $elapsed = time() - strtotime((string)$last['created_at']);
+        // Cooldown hanya untuk channel yang sama; ganti channel boleh langsung
+        // (kode lama otomatis dimatikan saat kode baru diterbitkan).
+        if ($elapsed < $cooldown && (string)$last['channel'] === $channel) {
+            fail('Tunggu ' . ($cooldown - $elapsed) . ' detik sebelum meminta kode lagi.', 429);
+        }
+    }
+
+    $issued = kaizenMfaIssueCode($DB, $uid, $channel, $target, $cfg, $user['name']);
+    if (!$issued['ok']) fail($issued['error'], 502);
+    respond([
+        'ok'      => true,
+        'channel' => $issued['channel'],
+        'target'  => $issued['target'],
+        'ttl'     => $issued['ttl'],
+        'message' => 'Kode baru dikirim ke ' . $issued['target'],
+    ]);
+}
+
+/* ------------------------------------------------------------
+ * 1d. mfa_verify — cek kode OTP; benar -> sesi login penuh
+ * ------------------------------------------------------------ */
+case 'mfa_verify': {
+    $uid = kaizenMfaPendingUser();
+    if (!$uid) fail('Sesi verifikasi tidak ditemukan / kedaluwarsa. Silakan login ulang.', 401);
+    if (!hash_equals(kaizenMfaPendingToken(), (string)($body['mfaToken'] ?? ''))) fail('Token verifikasi tidak sah.', 403);
+
+    $code = trim((string)($body['code'] ?? ''));
+    if (!preg_match('/^\d{6}$/', $code)) fail('Kode harus 6 digit angka.');
+
+    $cfg         = kaizenMfaConfig();
+    $maxAttempts = max(3, (int)$cfg['max_attempts']);
+
+    $st = $DB->prepare('SELECT * FROM mfa_codes WHERE user_id = ? AND used = 0 ORDER BY id DESC LIMIT 1');
+    $st->bind_param('s', $uid);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc();
+    $st->close();
+    if (!$row) fail('Kode tidak tersedia. Silakan minta kode baru.', 400);
+    if (strtotime((string)$row['expires_at']) < time()) fail('Kode sudah kedaluwarsa. Silakan minta kode baru.', 400);
+    if ((int)$row['attempts'] >= $maxAttempts) fail('Percobaan melebihi batas. Silakan minta kode baru.', 429);
+
+    if (!hash_equals((string)$row['code_hash'], hash('sha256', $code))) {
+        $upd = $DB->prepare('UPDATE mfa_codes SET attempts = attempts + 1 WHERE id = ?');
+        $upd->bind_param('i', $row['id']);
+        $upd->execute();
+        $upd->close();
+        $left = $maxAttempts - ((int)$row['attempts'] + 1);
+        fail('Kode salah. Sisa percobaan: ' . max(0, $left) . '.', 403);
+    }
+
+    $mark = $DB->prepare('UPDATE mfa_codes SET used = 1 WHERE id = ?');
+    $mark->bind_param('i', $row['id']);
+    $mark->execute();
+    $mark->close();
+
+    unset($_SESSION['mfa_uid'], $_SESSION['mfa_token'], $_SESSION['mfa_time']);
+
+    $st = $DB->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+    $st->bind_param('s', $uid);
+    $st->execute();
+    $user = $st->get_result()->fetch_assoc();
+    $st->close();
+    if (!$user || $user['status'] !== 'Aktif') fail('Akun tidak tersedia.', 403);
+
+    // Promosikan ke sesi login penuh (identik dengan login sukses)
+    session_regenerate_id(true);
+    $_SESSION['kaizen_user_id'] = $user['id'];
+    $_SESSION['kaizen_username'] = $user['username'];
+    $_SESSION['kaizen_role']     = $user['role'];
+    $_SESSION['kaizen_last']     = time();
+    $_SESSION['csrf']            = bin2hex(random_bytes(16));
+
+    $log = $DB->prepare('INSERT INTO login_log (username, full_name) VALUES (?, ?)');
+    $log->bind_param('ss', $user['username'], $user['name']);
+    $log->execute();
+    $log->close();
+
+    $inc = $DB->prepare('UPDATE users SET login_count = IFNULL(login_count, 0) + 1 WHERE id = ?');
+    $inc->bind_param('s', $user['id']);
+    $inc->execute();
+    $inc->close();
+    $user['login_count'] = ($user['login_count'] ?? 0) + 1;
+
+    // "Ingat perangkat ini" -> cookie KAIZENMFA 30 hari (login berikutnya tanpa OTP)
+    if (!empty($body['remember'])) kaizenMfaRememberDevice($DB, $user['id']);
+
+    unset($user['password']);
+    respond([
+        'ok'    => true,
+        'user'  => rowToApp($user, $TABLES['Users']),
+        'token' => session_id(),
+        'csrf'  => $_SESSION['csrf'],
+        'message' => 'Verifikasi berhasil',
+    ]);
+}
+
+/* ------------------------------------------------------------
+ * 1e. mfa_cancel — batalkan layar OTP, kembali ke form login
+ * ------------------------------------------------------------ */
+case 'mfa_cancel': {
+    if (kaizenMfaPendingUser()) unset($_SESSION['mfa_uid'], $_SESSION['mfa_token'], $_SESSION['mfa_time']);
+    respond(['ok' => true]);
+}
+
+/* ------------------------------------------------------------
+ * 1f. mfa_get / mfa_list / mfa_save — pengaturan MFA per-user
+ *     (butuh sesi; admin & superadmin; admin tidak boleh mengatur
+ *      akun superadmin, mengikuti pola reset password)
+ * ------------------------------------------------------------ */
+case 'mfa_get': {
+    requireAuth();
+    if (!in_array($_SESSION['kaizen_role'] ?? '', ['superadmin', 'admin'], true)) fail('Tidak diizinkan.', 403);
+    $uid = (string)($body['userId'] ?? '');
+    if ($uid === '') fail('userId wajib diisi');
+    $st = $DB->prepare('SELECT role FROM users WHERE id = ? LIMIT 1');
+    $st->bind_param('s', $uid);
+    $st->execute();
+    $u = $st->get_result()->fetch_assoc();
+    $st->close();
+    if (!$u) fail('User tidak ditemukan', 404);
+    if (($_SESSION['kaizen_role'] ?? '') === 'admin' && $u['role'] === 'superadmin') fail('Admin tidak boleh mengatur MFA akun Superadmin.', 403);
+    respond(['ok' => true, 'settings' => kaizenMfaSettings($DB, $uid)]);
+}
+
+case 'mfa_list': {
+    requireAuth();
+    if (!in_array($_SESSION['kaizen_role'] ?? '', ['superadmin', 'admin'], true)) fail('Tidak diizinkan.', 403);
+    $map = [];
+    $res = $DB->query('SELECT user_id, enabled, channel FROM mfa_settings');
+    if ($res) { while ($r = $res->fetch_assoc()) $map[$r['user_id']] = ['enabled' => (int)$r['enabled'], 'channel' => $r['channel']]; $res->close(); }
+    respond(['ok' => true, 'map' => $map]);
+}
+
+case 'mfa_save': {
+    requireAuth();
+    if (!in_array($_SESSION['kaizen_role'] ?? '', ['superadmin', 'admin'], true)) fail('Tidak diizinkan.', 403);
+    $uid     = (string)($body['userId'] ?? '');
+    $enabled = !empty($body['enabled']) ? 1 : 0;
+    $channel = (string)($body['channel'] ?? 'both');
+    if (!in_array($channel, ['email', 'whatsapp', 'both'], true)) $channel = 'both';
+    $email   = trim((string)($body['email'] ?? ''));
+    $wa      = trim((string)($body['whatsapp'] ?? ''));
+    if ($uid === '') fail('userId wajib diisi');
+
+    $st = $DB->prepare('SELECT id, role, name FROM users WHERE id = ? LIMIT 1');
+    $st->bind_param('s', $uid);
+    $st->execute();
+    $u = $st->get_result()->fetch_assoc();
+    $st->close();
+    if (!$u) fail('User tidak ditemukan', 404);
+    if (($_SESSION['kaizen_role'] ?? '') === 'admin' && $u['role'] === 'superadmin') fail('Admin tidak boleh mengatur MFA akun Superadmin.', 403);
+
+    $waNorm = $wa !== '' ? kaizenMfaNormalizePhone($wa) : '';
+    if ($wa !== '' && $waNorm === '') fail('Nomor WhatsApp tidak valid. Contoh: 0812xxxx atau 62812xxxx.');
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) fail('Alamat email tidak valid.');
+
+    if ($enabled) {
+        $pakaiEmail = $channel !== 'whatsapp';
+        $pakaiWa    = $channel !== 'email';
+        if ($pakaiEmail && $email === '') fail('Alamat email wajib diisi untuk pengiriman OTP via Email.');
+        if ($pakaiWa && $waNorm === '') fail('Nomor WhatsApp wajib diisi untuk pengiriman OTP via WhatsApp.');
+        if ($channel === 'both' && ($email === '' || $waNorm === '')) fail('Mode "Keduanya" butuh alamat email DAN nomor WhatsApp.');
+    }
+
+    $st = $DB->prepare('INSERT INTO mfa_settings (user_id, enabled, channel, email, whatsapp) VALUES (?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), channel = VALUES(channel), email = VALUES(email), whatsapp = VALUES(whatsapp)');
+    $st->bind_param('sisss', $uid, $enabled, $channel, $email, $waNorm);
+    $st->execute();
+    $st->close();
+
+    if (!$enabled) {
+        // MFA dimatikan -> bersihkan kode pending & daftar perangkat terpercaya
+        $d1 = $DB->prepare('DELETE FROM mfa_codes WHERE user_id = ?');
+        $d1->bind_param('s', $uid); $d1->execute(); $d1->close();
+        $d2 = $DB->prepare('DELETE FROM mfa_devices WHERE user_id = ?');
+        $d2->bind_param('s', $uid); $d2->execute(); $d2->close();
+    }
+
+    kaizenMfaDebugLog('SETTING user=' . $u['name'] . " enabled={$enabled} channel={$channel}");
+    respond(['ok' => true, 'settings' => kaizenMfaSettings($DB, $uid), 'message' => $enabled ? 'MFA diaktifkan.' : 'MFA dimatikan.']);
+}
+
 case 'logout': {
     $_SESSION = [];
     session_destroy();

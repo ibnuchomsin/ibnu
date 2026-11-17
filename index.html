@@ -196,6 +196,35 @@
                     </a>
                 </div>
             </form>
+
+            <!-- LAYAR VERIFIKASI DUA LANGKAH (OTP) -->
+            <div id="mfaPanel" class="hide">
+                <div class="text-center mb-6">
+                    <div class="w-14 h-14 mx-auto mb-4 bg-blue-600/20 border border-blue-500/30 rounded-2xl flex items-center justify-center text-blue-400 text-2xl">
+                        <i class="fas fa-shield-halved"></i>
+                    </div>
+                    <h3 class="text-white font-bold text-base">Verifikasi Dua Langkah</h3>
+                    <p class="text-[12px] text-slate-400 mt-1.5 leading-relaxed">Kode 6 digit dikirim via <b id="mfaChannelInfo" class="text-slate-200">Email</b> ke <b id="mfaTargetInfo" class="text-slate-200">-</b><br><span class="text-slate-500">berlaku <span id="mfaTtlInfo">5</span> menit</span></p>
+                </div>
+                <div id="mfaChannelBox" class="hide grid grid-cols-2 gap-2 mb-4">
+                    <button type="button" id="mfaChEmail" onclick="mfaPickChannel('email')" class="py-2.5 rounded-xl text-xs font-bold border transition-all bg-[#151c2e] border-slate-700/40 text-slate-400 hover:border-slate-500"><i class="fas fa-envelope mr-1.5"></i> Email</button>
+                    <button type="button" id="mfaChWhatsapp" onclick="mfaPickChannel('whatsapp')" class="py-2.5 rounded-xl text-xs font-bold border transition-all bg-[#151c2e] border-slate-700/40 text-slate-400 hover:border-slate-500"><i class="fab fa-whatsapp mr-1.5 text-emerald-500"></i> WhatsApp</button>
+                </div>
+                <form id="mfaForm" onsubmit="mfaSubmit(event)" autocomplete="off" class="space-y-4">
+                    <input type="text" id="mfaCode" inputmode="numeric" maxlength="6" placeholder="------" oninput="mfaCodeInput(this)" class="w-full text-center tracking-[0.55em] text-xl font-black py-3.5 bg-[#151c2e] border border-slate-700/40 rounded-xl text-white placeholder-slate-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/60 outline-none transition-all">
+                    <label class="flex items-center gap-2 text-[11px] text-slate-400 font-medium cursor-pointer justify-center">
+                        <input type="checkbox" id="mfaRemember" checked class="w-4 h-4 rounded accent-blue-500"> Ingat perangkat ini 30 hari
+                    </label>
+                    <div id="mfaError" class="hide p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-semibold text-center backdrop-blur-sm"></div>
+                    <button type="submit" id="mfaBtn" class="btn-shine w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[15px] rounded-xl shadow-[0_10px_35px_-10px_rgba(37,99,235,.65),0_0_32px_rgba(37,99,235,.3)] transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-shield-halved"></i><span>Verifikasi</span>
+                    </button>
+                    <div class="flex items-center justify-between text-[11px]">
+                        <button type="button" onclick="mfaBack()" class="text-slate-400 hover:text-slate-200 font-medium transition-colors"><i class="fas fa-arrow-left mr-1"></i> Kembali</button>
+                        <button type="button" id="mfaResendBtn" onclick="mfaResend()" class="text-blue-400 hover:text-blue-300 font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"><i class="fas fa-rotate-right mr-1"></i> Kirim Ulang</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -2924,7 +2953,36 @@
                     </div>
                     <p class="text-[10px] text-slate-400 italic pt-1">* Superadmin otomatis memiliki akses penuh ke seluruh modul.</p>
                 </div>
-                
+
+                <!-- VERIFIKASI 2 LANGKAH (MFA) per-user -->
+                <div id="uMfaBox" class="p-4 bg-purple-50 border border-purple-100 rounded-2xl space-y-2.5">
+                    <label class="flex items-center justify-between cursor-pointer">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-700"><i class="fas fa-shield-halved text-purple-600 mr-1.5"></i> Verifikasi 2 Langkah (OTP)</span>
+                        <input type="checkbox" id="uMfaEnabled" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500" onchange="document.getElementById('uMfaDetailBox').classList.toggle('hide', !this.checked)">
+                    </label>
+                    <div id="uMfaDetailBox" class="hide space-y-2.5 pt-1">
+                        <div class="grid grid-cols-2 gap-2 items-end">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Kirim Kode Via</label>
+                                <select id="uMfaChannel" class="w-full px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none">
+                                    <option value="both">Keduanya (Email + WA)</option>
+                                    <option value="email">Email saja</option>
+                                    <option value="whatsapp">WhatsApp saja</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Nomor WhatsApp</label>
+                                <input type="text" id="uMfaWhatsapp" inputmode="tel" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none" placeholder="0812xxxxxxx">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Alamat Email</label>
+                            <input type="email" id="uMfaEmail" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold outline-none" placeholder="budi@perusahaan.com">
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-relaxed">Saat login, user memasukkan kode OTP 6 digit yang dikirim ke Email/WhatsApp di atas (berlaku 5 menit). Pilih <b>Keduanya</b> agar user bisa memilih channel di layar login.</p>
+                    </div>
+                </div>
+
                 <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
                     <button type="button" onclick="closeModal('userModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors">Batal</button>
                     <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md transition-all">Simpan User</button>
@@ -3834,6 +3892,202 @@
             loginBtn.disabled = false;
         }
 
+        /* ================= VERIFIKASI DUA LANGKAH (MFA / OTP) =================
+           Password benar + MFA aktif pada akun -> server mengirim kode 6 digit
+           via Email/WhatsApp; layar ini meminta kode sebelum sesi dibuat.
+           "Ingat perangkat 30 hari" -> login berikutnya dari PC yang sama
+           tidak diminta kode lagi (cookie KAIZENMFA di sisi server). */
+        const MFA_STATE = { token: null, channels: [], channel: '', target: '', resendTimer: null };
+
+        function showMfaPanel(res) {
+            MFA_STATE.token = res.mfaToken;
+            MFA_STATE.channels = Array.isArray(res.channels) ? res.channels : [];
+            MFA_STATE.channel = res.channel || MFA_STATE.channels[0] || 'email';
+            MFA_STATE.target = res.target || '';
+            clearInterval(MFA_STATE.resendTimer);
+
+            const el = id => document.getElementById(id);
+            el('loginForm').classList.add('hide');
+            el('mfaPanel').classList.remove('hide');
+            el('mfaCode').value = '';
+            el('mfaError').classList.add('hide');
+            el('mfaRemember').checked = true;
+            el('mfaTtlInfo').textContent = res.ttl || 5;
+            el('mfaChannelInfo').textContent = MFA_STATE.channel === 'whatsapp' ? 'WhatsApp' : 'Email';
+            el('mfaTargetInfo').textContent = MFA_STATE.target;
+            el('mfaChannelBox').classList.toggle('hide', MFA_STATE.channels.length <= 1);
+            updateMfaChannelUi();
+            mfaStartResendCooldown(Math.min(45, 30));
+            el('mfaCode').focus();
+        }
+
+        function updateMfaChannelUi() {
+            const set = (id, active) => {
+                const b = document.getElementById(id);
+                if (!b) return;
+                b.classList.toggle('bg-blue-600', active);
+                b.classList.toggle('text-white', active);
+                b.classList.toggle('border-blue-500', active);
+                b.classList.toggle('bg-[#151c2e]', !active);
+                b.classList.toggle('text-slate-400', !active);
+                b.classList.toggle('border-slate-700/40', !active);
+            };
+            set('mfaChEmail', MFA_STATE.channel === 'email');
+            set('mfaChWhatsapp', MFA_STATE.channel === 'whatsapp');
+            const info = document.getElementById('mfaChannelInfo');
+            if (info) info.textContent = MFA_STATE.channel === 'whatsapp' ? 'WhatsApp' : 'Email';
+        }
+
+        function mfaPickChannel(ch) {
+            if (MFA_STATE.channel === ch || !MFA_STATE.token) return;
+            MFA_STATE.channel = ch;
+            updateMfaChannelUi();
+            mfaResend();   // kode baru dikirim ke channel baru (kode lama otomatis mati)
+        }
+
+        function mfaCodeInput(el) {
+            el.value = String(el.value || '').replace(/\D/g, '').slice(0, 6);
+            if (el.value.length === 6) mfaSubmit(new Event('submit'));
+        }
+
+        function mfaError(msg) {
+            const box = document.getElementById('mfaError');
+            if (!box) return;
+            box.textContent = msg;
+            box.classList.remove('hide');
+        }
+
+        function mfaSubmit(e) {
+            if (e) e.preventDefault();
+            const code = (document.getElementById('mfaCode') || {}).value || '';
+            if (code.length !== 6) { mfaError('Masukkan 6 digit kode verifikasi.'); return; }
+            const btn = document.getElementById('mfaBtn');
+            btn.classList.add('opacity-70', 'cursor-wait');
+            btn.disabled = true;
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    op: 'mfa_verify',
+                    mfaToken: MFA_STATE.token,
+                    code: code,
+                    remember: !!(document.getElementById('mfaRemember') || {}).checked
+                })
+            })
+            .then(r => r.json())
+            .then(function(res) {
+                btn.classList.remove('opacity-70', 'cursor-wait');
+                btn.disabled = false;
+                if (res.ok && res.user) { mfaFinishLogin(res); return; }
+                if (res.status === 401) { mfaBack(res.error || 'Sesi verifikasi berakhir. Silakan login ulang.'); return; }
+                mfaError(res.error || 'Kode verifikasi tidak sah.');
+            })
+            .catch(function() {
+                btn.classList.remove('opacity-70', 'cursor-wait');
+                btn.disabled = false;
+                mfaError('Server tidak dapat dihubungi. Coba lagi.');
+            });
+        }
+
+        function mfaResend() {
+            if (!MFA_STATE.token) return;
+            const btn = document.getElementById('mfaResendBtn');
+            btn.disabled = true;
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ op: 'mfa_send', mfaToken: MFA_STATE.token, channel: MFA_STATE.channel })
+            })
+            .then(r => r.json())
+            .then(function(res) {
+                if (res.ok) {
+                    if (res.target) {
+                        MFA_STATE.target = res.target;
+                        document.getElementById('mfaTargetInfo').textContent = res.target;
+                    }
+                    if (res.ttl) document.getElementById('mfaTtlInfo').textContent = res.ttl;
+                    showToast('Kode baru dikirim ke ' + res.target, 'success');
+                    mfaStartResendCooldown(30);
+                } else {
+                    btn.disabled = false;
+                    mfaError(res.error || 'Gagal mengirim kode.');
+                    if (res.status === 429) mfaStartResendCooldown(30);
+                }
+            })
+            .catch(function() { btn.disabled = false; mfaError('Server tidak dapat dihubungi.'); });
+        }
+
+        function mfaStartResendCooldown(sec) {
+            clearInterval(MFA_STATE.resendTimer);
+            const btn = document.getElementById('mfaResendBtn');
+            let left = sec;
+            btn.disabled = true;
+            const label = btn.innerHTML;
+            const tick = () => {
+                if (left <= 0) { btn.disabled = false; btn.innerHTML = label; return; }
+                btn.innerHTML = `<i class="fas fa-rotate-right mr-1"></i> Tunggu ${left}s`;
+                left--;
+                MFA_STATE.resendTimer = setTimeout(tick, 1000);
+            };
+            tick();
+        }
+
+        function mfaBack(message) {
+            clearInterval(MFA_STATE.resendTimer);
+            if (MFA_STATE.token) {
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ op: 'mfa_cancel', mfaToken: MFA_STATE.token })
+                }).catch(function() { /* abaikan */ });
+            }
+            MFA_STATE.token = null;
+            const el = id => document.getElementById(id);
+            el('mfaPanel').classList.add('hide');
+            el('loginForm').classList.remove('hide');
+            el('mfaCode').value = '';
+            el('mfaError').classList.add('hide');
+            if (message) {
+                const err = el('loginError');
+                err.textContent = message;
+                err.classList.remove('hide');
+                el('loginBtn').classList.remove('opacity-70', 'cursor-wait');
+                el('loginBtn').disabled = false;
+            }
+        }
+
+        function mfaFinishLogin(res) {
+            clearInterval(MFA_STATE.resendTimer);
+            MFA_STATE.token = null;
+            const el = id => document.getElementById(id);
+            el('mfaPanel').classList.add('hide');
+            el('mfaCode').value = '';
+            el('loginForm').classList.remove('hide');
+            el('loginError').classList.add('hide');
+            const loginBtn = el('loginBtn');
+            const originalBtnText = loginBtn.innerHTML;
+            const errorEl = el('loginError');
+            if (USERS.length === 0) USERS = normalizeServerUsers([res.user]);
+            const me = USERS.find(u => String(u.username).toLowerCase() === String(res.user.username).toLowerCase()) || normalizeServerUsers([res.user])[0];
+            processLoginSuccess(me, errorEl, loginBtn, originalBtnText);
+            fetchDataFromServer();
+            loadMfaList();
+        }
+
+        /* Daftar status MFA seluruh user (badge di Kelola Akun) — admin/superadmin */
+        let MFA_MAP = {};
+        function loadMfaList() {
+            const role = (APP_STATE.currentUser || {}).role;
+            if (role !== 'superadmin' && role !== 'admin') { MFA_MAP = {}; return; }
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ op: 'mfa_list' })
+            }).then(r => r.json()).then(function(res) {
+                if (res.ok && res.map) { MFA_MAP = res.map; renderUsers(); }
+            }).catch(function() { /* abaikan */ });
+        }
+
         function handleLogin(e) {
             e.preventDefault();
             const uInput = document.getElementById('loginUsername').value.trim();
@@ -3854,6 +4108,7 @@
             })
             .then(r => r.json())
             .then(function(res) {
+                if (res.ok && res.requiresMfa) { showMfaPanel(res); return; }   // Verifikasi Dua Langkah
                 if (res.ok && res.user) {
                     // Daftar user penuh sudah dimuat oleh fetchDataFromServer();
                     // hanya fallback ke single user bila fetch awal gagal
@@ -3862,6 +4117,7 @@
                     processLoginSuccess(me, errorEl, loginBtn, originalBtnText);
                     // Pastikan daftar penuh (semua modul & badge) tersinkron setelah login
                     fetchDataFromServer();
+                    loadMfaList();
                 } else if (res.code === 'LOGIN_RATE_LIMITED') {
                     processLoginFail(errorEl, loginBtn, originalBtnText, res.error);
                 } else {
@@ -3923,6 +4179,7 @@
                 document.getElementById('loginOverlay').classList.add('hide');
                 updateRoleUI();
                 renderDashboard(); renderTickets(); renderAssets(); renderGemba(); renderGembaQc(); renderDocuments(); renderUsers();
+                loadMfaList();
                 let initialTab = APP_STATE.activeTab || 'dashboard';
                 // Link menu "?tab=<modul>" dibuka di tab baru: terapkan SEKARANG,
                 // jangan menunggu window.onload (sesi-lanjut selesai lebih dulu darinya)
@@ -9084,6 +9341,8 @@
                 empty.classList.add('hide');
                 list.innerHTML = filtered.map(u => {
                     const badgeClass = u.role === 'superadmin' ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : (u.role === 'admin' ? 'bg-blue-100 text-blue-800 border-blue-200' : (['leader','officer','supervisor','manager'].includes(u.role) ? 'bg-violet-100 text-violet-800 border-violet-200' : 'bg-slate-100 text-slate-800 border-slate-200'));
+                    const mfaOn = MFA_MAP && MFA_MAP[u.id] && MFA_MAP[u.id].enabled;
+                    const mfaBadge = mfaOn ? `<span class="inline-block px-1.5 py-0.5 rounded-full text-[9px] font-bold border bg-purple-50 text-purple-700 border-purple-200 uppercase" title="Verifikasi 2 Langkah (OTP) aktif"><i class="fas fa-shield-halved"></i> MFA</span>` : '';
                     const perms = normalizePermissions(u.permissions, u.role);
                     
                     let permissionsHtml = '';
@@ -9109,6 +9368,7 @@
                                     <h4 class="font-bold text-slate-800 text-sm truncate">${escapeHTML(u.name)}</h4>
                                     <p class="text-xs text-slate-500 truncate mb-1">@${escapeHTML(u.username)}</p>
                                     <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass} uppercase">${escapeHTML(u.role)}</span>
+                                    ${mfaBadge}
                                 </div>
                             </div>
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 space-y-1.5 text-[11px]">
@@ -9146,6 +9406,15 @@
             ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcScan', 'permRsSupplier', 'permEmpProfile', 'permWarehouse', 'permWhTransaksi', 'permWhLedger', 'permWhPrintdn'].forEach(cb => document.getElementById(cb).checked = false);
             document.getElementById('qcSubPermsBox').classList.add('hide');
             document.getElementById('whSubPermsBox').classList.add('hide');
+
+            // MFA: reset tampilan; hanya admin/superadmin yang boleh mengatur
+            const mfaRole = (APP_STATE.currentUser || {}).role;
+            document.getElementById('uMfaBox').classList.toggle('hide', !(mfaRole === 'superadmin' || mfaRole === 'admin'));
+            document.getElementById('uMfaEnabled').checked = false;
+            document.getElementById('uMfaDetailBox').classList.add('hide');
+            document.getElementById('uMfaChannel').value = 'both';
+            document.getElementById('uMfaEmail').value = '';
+            document.getElementById('uMfaWhatsapp').value = '';
 
             if (action === 'create') {
                 document.getElementById('userModalTitle').textContent = 'Tambah User Baru';
@@ -9185,6 +9454,7 @@
                     const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn' };
                     const adaWhSub = Object.keys(whSubIds).some(t => perms.includes(t));
                     Object.keys(whSubIds).forEach(t => document.getElementById(whSubIds[t]).checked = adaWhSub ? perms.includes(t) : true);
+                    loadMfaSettings(u.id);   // muat setting Verifikasi 2 Langkah user ini
                 }
             }
             document.getElementById('qcSubPermsBox').classList.toggle('hide', !document.getElementById('permGembaQc').checked);
@@ -9269,9 +9539,52 @@
             
             syncToSheet('Users', updatedRecord);
             persistData();
+
+            // Verifikasi 2 Langkah: simpan setting MFA bersamaan dengan user
+            // (delay kecil agar record Users sudah tersimpan di server dulu)
+            const mfaRole = (APP_STATE.currentUser || {}).role;
+            if (mfaRole === 'superadmin' || mfaRole === 'admin') {
+                setTimeout(() => mfaSaveSettings(updatedRecord.id), 800);
+            }
+
             closeModal('userModal');
             renderUsers();
             renderDashboard();
+        }
+
+        /* ---- MFA per-user: muat & simpan setting dari Kelola Akun ---- */
+        function loadMfaSettings(userId) {
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ op: 'mfa_get', userId })
+            }).then(r => r.json()).then(function(res) {
+                if (!res.ok || !res.settings) return;
+                const s = res.settings;
+                document.getElementById('uMfaEnabled').checked = !!s.enabled;
+                document.getElementById('uMfaDetailBox').classList.toggle('hide', !s.enabled);
+                document.getElementById('uMfaChannel').value = s.channel || 'both';
+                document.getElementById('uMfaEmail').value = s.email || '';
+                document.getElementById('uMfaWhatsapp').value = s.whatsapp || '';
+            }).catch(function() { /* abaikan */ });
+        }
+
+        function mfaSaveSettings(userId) {
+            fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    op: 'mfa_save',
+                    userId,
+                    enabled: document.getElementById('uMfaEnabled').checked,
+                    channel: document.getElementById('uMfaChannel').value,
+                    email: document.getElementById('uMfaEmail').value.trim(),
+                    whatsapp: document.getElementById('uMfaWhatsapp').value.trim()
+                })
+            }).then(r => r.json()).then(function(res) {
+                if (res.ok) { showToast('Pengaturan Verifikasi 2 Langkah disimpan.', 'success'); loadMfaList(); }
+                else showToast(res.error || 'Gagal menyimpan pengaturan MFA.', 'error');
+            }).catch(function() { showToast('Server tidak dapat dihubungi (MFA).', 'error'); });
         }
 
         /* ---- Reset Password (Superadmin & Admin; akun Superadmin hanya bisa direset Superadmin) ---- */
