@@ -329,6 +329,10 @@
                             <i class="fas fa-print text-xs w-4 text-center"></i>
                             <span>Print DN</span>
                         </a>
+                        <a href="?tab=wh-stockreport" onclick="navigateTab(event, 'wh-stockreport')" id="nav-wh-stockreport" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-chart-simple text-xs w-4 text-center"></i>
+                            <span>Stock Report</span>
+                        </a>
                     </div>
                 </div>
                 <a href="?tab=documents" onclick="navigateTab(event, 'documents')" id="nav-documents" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all hide">
@@ -1425,6 +1429,86 @@
                 </div>
                 <div class="flex-1 bg-slate-200/50 p-4 md:p-6 rounded-2xl overflow-x-auto flex justify-center items-start border border-slate-200 min-w-0">
                     <div id="whDnPreview" class="bg-white shadow-2xl shrink-0" style="width:210mm;min-height:148.5mm"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-wh-stockreport" class="p-3 md:p-5 hide">
+            <div class="max-w-[1800px] mx-auto flex flex-col gap-5">
+                <!-- Ringkasan -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 shrink-0">
+                    <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 relative overflow-hidden">
+                        <div class="absolute -right-3 -top-3 w-14 h-14 bg-emerald-50 rounded-full blur-lg"></div>
+                        <h3 class="text-slate-500 text-[0.65rem] font-bold uppercase mb-1 tracking-wider relative">Total Volume (Liter)</h3>
+                        <p class="text-2xl md:text-3xl font-extrabold text-slate-800 font-mono relative" id="whSrVolume">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-rose-100 p-4 relative overflow-hidden">
+                        <div class="absolute -right-3 -top-3 w-14 h-14 bg-rose-50 rounded-full blur-lg"></div>
+                        <h3 class="text-slate-500 text-[0.65rem] font-bold uppercase mb-1 tracking-wider relative">Stok Kritis (&lt; Min)</h3>
+                        <p class="text-2xl md:text-3xl font-extrabold text-rose-600 font-mono relative" id="whSrKritis">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-amber-100 p-4 relative overflow-hidden">
+                        <div class="absolute -right-3 -top-3 w-14 h-14 bg-amber-50 rounded-full blur-lg"></div>
+                        <h3 class="text-slate-500 text-[0.65rem] font-bold uppercase mb-1 tracking-wider relative">Overstock (&gt; Max)</h3>
+                        <p class="text-2xl md:text-3xl font-extrabold text-amber-600 font-mono relative" id="whSrOver">0</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 relative overflow-hidden">
+                        <div class="absolute -right-3 -top-3 w-14 h-14 bg-slate-50 rounded-full blur-lg"></div>
+                        <h3 class="text-slate-500 text-[0.65rem] font-bold uppercase mb-1 tracking-wider relative">Total Varian (SKU)</h3>
+                        <p class="text-2xl md:text-3xl font-extrabold text-slate-800 font-mono relative" id="whSrSku">0</p>
+                    </div>
+                </div>
+
+                <!-- Matriks Stok Aktual -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-slate-100 p-1.5 rounded-lg text-slate-600"><i class="fas fa-table-cells text-sm"></i></div>
+                            <h2 class="text-sm font-extrabold text-slate-800">Matriks Stok Aktual</h2>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap justify-end">
+                            <div class="flex items-center gap-1.5">
+                                <label class="text-[0.65rem] font-bold text-slate-500 uppercase">Customer:</label>
+                                <select id="whSrCustomer" class="wh-cust-select border border-slate-200 rounded-lg px-2 py-1.5 text-xs bg-slate-50 outline-none w-36" onchange="renderWhStockReport()"></select>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <label class="text-[0.65rem] font-bold text-slate-500 uppercase">Tanggal:</label>
+                                <input type="date" id="whSrDate" class="border border-slate-200 rounded-lg px-2 py-1.5 text-xs bg-slate-50 outline-none" onchange="renderWhStockReport()">
+                            </div>
+                            <button type="button" id="btnWhSrAdjust" onclick="whSrOpenAdjust()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center ml-1">
+                                <i class="fas fa-wrench mr-1.5"></i> Adj. Stok
+                            </button>
+                            <button type="button" onclick="whSrExportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm transition-colors flex items-center" title="Download CSV Matriks Stok">
+                                <i class="fas fa-file-excel mr-1.5"></i> Export CSV
+                            </button>
+                            <div class="relative w-40 ml-1">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><i class="fas fa-search text-xs"></i></div>
+                                <input type="text" id="whSrSearch" placeholder="Cari Part..." class="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs bg-slate-50 outline-none w-full font-medium" oninput="whSrSearchDebounce()">
+                            </div>
+                            <button type="button" onclick="whSrToggleFullscreen()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded-lg transition-colors shadow-sm border border-slate-200 flex items-center justify-center h-8 w-8 ml-1" title="Full Screen">
+                                <i class="fas fa-expand" id="whSrFsIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto bg-white rounded-b-2xl min-h-[300px]">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="w-8 text-center border border-slate-200 py-2 px-1 text-[0.65rem] font-bold text-slate-600">No</th>
+                                    <th class="border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Part Number</th>
+                                    <th class="border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Nama Part</th>
+                                    <th class="text-center border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Ukuran</th>
+                                    <th class="text-right border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Min</th>
+                                    <th class="text-right border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Max</th>
+                                    <th class="text-right border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-blue-800 bg-blue-50/50" id="whSrHeaderStok">Stok (Pcs)</th>
+                                    <th class="text-right border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Liter</th>
+                                    <th class="w-32 text-center border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Level</th>
+                                    <th class="w-24 text-center border border-slate-200 py-2 px-2 text-[0.65rem] font-bold text-slate-600">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="whSrBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </section>
@@ -2930,6 +3014,39 @@
         </div>
     </div>
 
+    <!-- MODAL ADJ. STOK (Stock Report) -->
+    <div id="modalWhSrAdjust" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('modalWhSrAdjust')">
+        <div class="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl modal-animate" onclick="event.stopPropagation()">
+            <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-purple-50">
+                <h3 class="font-bold text-slate-800 text-sm"><i class="fas fa-wrench text-purple-600 mr-1"></i> Penyesuaian Stok (Stock Opname)</h3>
+                <button onclick="closeModal('modalWhSrAdjust')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="formWhSrAdjust" onsubmit="whSrSaveAdjust(event); return false;" class="p-5 space-y-3" autocomplete="off">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Produk</label>
+                    <select id="whSrAdjProduct" onchange="whSrAdjPick()" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2.5 bg-slate-50 outline-none" required></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Stok Sistem Saat Ini</label>
+                    <input type="text" id="whSrAdjCurrent" readonly class="w-full text-xs font-bold font-mono border border-slate-200 rounded-lg px-3 py-2.5 bg-slate-100 text-slate-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Stok Fisik Aktual (Hasil Opname)</label>
+                    <input type="number" id="whSrAdjQty" min="0" step="1" required class="w-full text-xs font-bold font-mono border border-slate-300 rounded-lg px-3 py-2.5 outline-none focus:border-purple-500" placeholder="mis. 240">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Catatan (Opsional)</label>
+                    <input type="text" id="whSrAdjNote" maxlength="120" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2.5" placeholder="mis. Hasil opname gudang Nov 2026">
+                </div>
+                <p class="text-[0.65rem] text-slate-400 leading-relaxed">Sistem otomatis membuat transaksi IN/OUT penyesuaian bertanda <b class="font-mono">[ADJUSTMENT]</b> agar selisih tercatat di Report Detail.</p>
+                <div class="flex gap-2 pt-1">
+                    <button type="button" onclick="closeModal('modalWhSrAdjust')" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50">Batal</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-md">Proses Penyesuaian</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL MENU QC (mobile) -->
     <div id="qcMobileMenu" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end md:items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('qcMobileMenu')">
         <div class="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl modal-animate" onclick="event.stopPropagation()">
@@ -3932,7 +4049,7 @@
             }
 
             APP_STATE.activeTab = tabId;
-            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
+            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'wh-stockreport', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
                 const el = document.getElementById(`view-${t}`);
                 if (el) el.classList.add('hide');
 
@@ -3959,7 +4076,7 @@
                 activeMobileNav.className = "flex flex-col items-center gap-1 text-[10px] font-semibold text-brand-400";
             }
 
-            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
+            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', 'wh-stockreport': 'Warehouse — Stock Report', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
             document.getElementById('headerTitle').textContent = titles[tabId] || 'Portal';
 
             // Sub-menu QC: auto-buka + sorot parent saat salah satu tab QC aktif
@@ -4006,6 +4123,7 @@
             if (tabId === 'wh-transaksi') renderWhTransaksi();
             if (tabId === 'wh-ledger') renderWhLedger();
             if (tabId === 'wh-printdn') renderWhPrintDn();
+            if (tabId === 'wh-stockreport') renderWhStockReport();
         }
 
         /* ===== DASHBOARD: filter periode bulan/tahun ===== */
@@ -5835,7 +5953,7 @@
         /* ===================== WAREHOUSE (mirror QMS: Transaksi / Ledger / Print DN) =====================
            Transaksi disimpan di tabel wh_transactions (sheet 'WhTx'), produk & customer dari Master Data.
            Stok = Qty Stok di Master Produk (saldo awal) + total Inbound - total Outbound. */
-        const WH_TABS = ['wh-transaksi', 'wh-ledger', 'wh-printdn'];
+        const WH_TABS = ['wh-transaksi', 'wh-ledger', 'wh-printdn', 'wh-stockreport'];
 
         // Izin 'warehouse' = saklar induk; tanpa sub-izin sama sekali -> semua sub-menu tampil
         function whChildAllowed(perms, tabId) {
@@ -5856,7 +5974,8 @@
         const WH_MOBILE_ITEMS = [
             { tab: 'wh-transaksi', icon: 'fa-right-left', label: 'Transaksi', color: 'bg-emerald-50 text-emerald-600' },
             { tab: 'wh-ledger', icon: 'fa-file-invoice', label: 'Report Detail', color: 'bg-indigo-50 text-indigo-600' },
-            { tab: 'wh-printdn', icon: 'fa-print', label: 'Print DN', color: 'bg-blue-50 text-blue-600' }
+            { tab: 'wh-printdn', icon: 'fa-print', label: 'Print DN', color: 'bg-blue-50 text-blue-600' },
+            { tab: 'wh-stockreport', icon: 'fa-chart-simple', label: 'Stock Report', color: 'bg-purple-50 text-purple-600' }
         ];
 
         function openWhMobileMenu() {
@@ -5896,7 +6015,7 @@
             const opts = names.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('');
             document.querySelectorAll('.wh-cust-select').forEach(sel => {
                 const keep = sel.value;
-                sel.innerHTML = `<option value="">${sel.id === 'whLedgerCustomer' ? '-- Semua Customer --' : '-- Pilih Customer --'}</option>` + opts;
+                sel.innerHTML = `<option value="">${(sel.id === 'whLedgerCustomer' || sel.id === 'whSrCustomer') ? '-- Semua Customer --' : '-- Pilih Customer --'}</option>` + opts;
                 if (names.includes(keep)) sel.value = keep;
             });
         }
@@ -6009,6 +6128,7 @@
             document.getElementById(pre + 'Rows').innerHTML = '';
             whAddTxRow(pre + 'Rows');
             renderWhTransaksi();
+            renderWhStockReport();
             showToast(`${type === 'IN' ? 'Inbound' : 'Outbound'} ${entries.length} item berhasil diproses.`, 'success');
         }
 
@@ -6133,6 +6253,204 @@
             ]));
             data.push(['', 'TOTAL', '', '', '', '', String(L.totIn), String(L.totOut), L.partNo ? String(L.closing) : '', '']);
             exportToCSV(`Report_Detail_Warehouse_${L.partNo ? L.partNo.replace(/[^A-Za-z0-9_-]/g, '_') : 'Semua'}_${whToday()}.csv`, data);
+        }
+
+        /* ================= STOCK REPORT (Matriks Stok Aktual) =================
+           Meniru Dashboard file lama: 4 kartu ringkasan + matriks stok dengan
+           filter customer/tanggal, Adj. Stok (Stock Opname), Export CSV,
+           pencarian & fullscreen. Stok = opening + IN - OUT; jika filter
+           tanggal diisi, stok dihitung "as of" tanggal tersebut. */
+        let whSrSearchTimer = null;
+
+        function whStockAsOf(partNo, dateStr) {
+            if (!dateStr) return whStock(partNo);
+            const k = whKey(partNo);
+            let delta = 0;
+            WH_DATA.forEach(t => {
+                if (whKey(t.partNo) !== k) return;
+                const d = String(t.date || '').slice(0, 10);
+                if (!d || d <= dateStr) return; // transaksi setelah tanggal filter belum terjadi
+                delta += t.type === 'IN' ? -whNum(t.qty) : whNum(t.qty);
+            });
+            return whStock(partNo) + delta;
+        }
+
+        function whSrFilters() {
+            return {
+                cust: (document.getElementById('whSrCustomer') || {}).value || '',
+                date: (document.getElementById('whSrDate') || {}).value || '',
+                q: ((document.getElementById('whSrSearch') || {}).value || '').trim().toLowerCase()
+            };
+        }
+
+        function whSrCompute() {
+            const f = whSrFilters();
+            const rows = [];
+            let totalLit = 0;
+            whProducts().forEach(p => {
+                if (!String(p.partNo || '').trim()) return;
+                if (f.cust && whKey(p.customerName) !== whKey(f.cust)) return;
+                if (f.q && !(String(p.partNo).toLowerCase().includes(f.q) || String(p.partName || '').toLowerCase().includes(f.q))) return;
+                const stock = whStockAsOf(p.partNo, f.date);
+                const liter = stock * (whNum(p.sizeVal) || 0);
+                totalLit += liter;
+                const minTarget = whNum(p.minStock);
+                const maxTarget = whNum(p.maxStock) || 1;
+                let status, progressColor;
+                if (stock === 0) { status = 'KOSONG'; progressColor = 'bg-red-600'; }
+                else if (stock < minTarget) { status = 'KRITIS'; progressColor = 'bg-orange-500'; }
+                else if (stock > maxTarget) { status = 'OVER'; progressColor = 'bg-amber-500'; }
+                else { status = 'AMAN'; progressColor = 'bg-emerald-500'; }
+                let pct = (stock / maxTarget) * 100;
+                if (pct > 100) pct = 100;
+                let minPct = (minTarget / maxTarget) * 100;
+                if (minPct > 100) minPct = 100;
+                rows.push({ p, stock, liter, status, progressColor, pct, minPct });
+            });
+            return { rows, totalLit, ...f };
+        }
+
+        function renderWhStockReport() {
+            const view = document.getElementById('view-wh-stockreport');
+            if (!view) return;
+            whFillCustomerSelects();
+            const btnAdj = document.getElementById('btnWhSrAdjust');
+            if (btnAdj) {
+                const role = (APP_STATE.currentUser || {}).role;
+                btnAdj.classList.toggle('hide', !(role === 'superadmin' || role === 'admin'));
+            }
+            const headerEl = document.getElementById('whSrHeaderStok');
+            if (headerEl) headerEl.innerHTML = whSrFilters().date ? 'Histori Stok <i class="fas fa-clock-rotate-left ml-1"></i>' : 'Stok (Pcs)';
+
+            const tbody = document.getElementById('whSrBody');
+            if (!tbody) return;
+            const { rows, totalLit, date } = whSrCompute();
+            const belowMin = rows.filter(r => r.status === 'KOSONG' || r.status === 'KRITIS').length;
+            const aboveMax = rows.filter(r => r.status === 'OVER').length;
+
+            const badge = (icon, text, bg, border, fg) => `<span class="${bg} ${fg} px-2 py-1 rounded-full text-[0.65rem] font-black border ${border} shadow-sm flex items-center justify-center gap-1 w-full"><i class="fas ${icon}"></i> ${text}</span>`;
+            tbody.innerHTML = rows.length ? rows.map((r, i) => `
+                <tr class="hover:bg-slate-50/50">
+                    <td class="text-center text-slate-800 font-black text-[0.75rem] border border-slate-100">${i + 1}</td>
+                    <td class="font-extrabold font-mono text-[0.7rem] text-slate-800 border border-slate-100">${escapeHTML(r.p.partNo)}</td>
+                    <td class="text-[0.7rem] text-slate-700 font-bold border border-slate-100 truncate max-w-[150px]" title="${escapeHTML(r.p.partName || '')}">${escapeHTML(r.p.partName || '')}</td>
+                    <td class="text-center border border-slate-100"><span class="bg-white border border-slate-200 px-1.5 py-0.5 rounded text-[0.6rem] font-extrabold shadow-sm">${escapeHTML(r.p.sizeStr || '-')}</span></td>
+                    <td class="text-right text-slate-500 text-[0.7rem] font-mono border border-slate-100">${whFmt(r.p.minStock)}</td>
+                    <td class="text-right text-slate-500 text-[0.7rem] font-mono border border-slate-100">${whFmt(r.p.maxStock)}</td>
+                    <td class="text-right font-black text-blue-700 bg-blue-50/30 font-mono text-[0.8rem] border border-slate-100">${whFmt(r.stock)}</td>
+                    <td class="text-right text-slate-800 font-extrabold text-[0.7rem] font-mono border border-slate-100">${whFmt(Math.round(r.liter))}</td>
+                    <td class="border border-slate-100 align-middle px-2 py-0.5">
+                        <div class="flex flex-col w-full justify-center">
+                            <div class="relative w-full h-1.5 bg-slate-300 rounded-full overflow-hidden mb-0.5">
+                                <div class="absolute top-0 left-0 h-full ${r.progressColor} transition-all duration-500 rounded-full" style="width: ${r.pct}%"></div>
+                                <div class="absolute top-0 bottom-0 w-[2px] bg-slate-800 z-10" style="left: ${r.minPct}%;" title="Batas Minimal (${whFmt(r.p.minStock)})"></div>
+                            </div>
+                            <div class="text-[0.55rem] text-slate-700 text-right font-mono font-black leading-none">${Math.round(r.pct)}%</div>
+                        </div>
+                    </td>
+                    <td class="border border-slate-100 align-middle px-1 py-0.5"><div class="w-[4.5rem] mx-auto">${
+                        r.status === 'KOSONG' ? badge('fa-xmark', 'KOSONG', 'bg-red-600', 'border-red-700', 'text-white') :
+                        r.status === 'KRITIS' ? badge('fa-exclamation', 'KRITIS', 'bg-orange-500', 'border-orange-600', 'text-white') :
+                        r.status === 'OVER' ? badge('fa-arrow-up', 'OVER', 'bg-amber-400', 'border-amber-500', 'text-amber-950') :
+                        badge('fa-check', 'AMAN', 'bg-emerald-500', 'border-emerald-600', 'text-white')
+                    }</div>
+                    </td>
+                </tr>`).join('') : `<tr><td colspan="10" class="text-center py-6 text-slate-400 text-xs font-bold">Pencarian/Filter tidak menemukan data.</td></tr>`;
+
+            const el = id => document.getElementById(id);
+            if (el('whSrVolume')) el('whSrVolume').textContent = whFmt(Math.round(totalLit));
+            if (el('whSrKritis')) el('whSrKritis').textContent = belowMin;
+            if (el('whSrOver')) el('whSrOver').textContent = aboveMax;
+            if (el('whSrSku')) el('whSrSku').textContent = rows.length;
+            if (date) view.dataset.asof = date; else delete view.dataset.asof;
+        }
+
+        function whSrSearchDebounce() {
+            clearTimeout(whSrSearchTimer);
+            whSrSearchTimer = setTimeout(() => renderWhStockReport(), 300);
+        }
+
+        function whSrToggleFullscreen() {
+            const sec = document.getElementById('view-wh-stockreport');
+            if (!sec) return;
+            if (document.fullscreenElement) document.exitFullscreen();
+            else if (sec.requestFullscreen) sec.requestFullscreen().catch(() => showToast('Layar penuh tidak didukung browser ini.', 'error'));
+            else showToast('Layar penuh tidak didukung browser ini.', 'error');
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            const ic = document.getElementById('whSrFsIcon');
+            if (ic) ic.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+            const sec = document.getElementById('view-wh-stockreport');
+            if (sec) sec.style.background = document.fullscreenElement ? '#f1f5f9' : '';
+        });
+
+        function whSrExportCSV() {
+            const { rows, date } = whSrCompute();
+            if (!rows.length) { showToast('Tidak ada data untuk diekspor pada filter ini.', 'error'); return; }
+            const data = [['No', 'Part Number', 'Nama Part', 'Ukuran', 'Min', 'Max', 'Stok Pcs', 'Liter', 'Level (%)', 'Status']];
+            rows.forEach((r, i) => data.push([
+                String(i + 1), escapeCSVField(r.p.partNo || ''), escapeCSVField(r.p.partName || ''), escapeCSVField(r.p.sizeStr || ''),
+                String(whNum(r.p.minStock)), String(whNum(r.p.maxStock)), String(r.stock), String(Math.round(r.liter)),
+                `${Math.round(r.pct)}%`, r.status
+            ]));
+            const tag = date ? `_AsOf_${date}` : '';
+            exportToCSV(`Stock_Report${tag}_${whToday()}.csv`, data);
+            showToast('Matriks Stok berhasil diunduh sebagai CSV.', 'success');
+        }
+
+        function whSrOpenAdjust() {
+            const role = (APP_STATE.currentUser || {}).role;
+            if (role !== 'superadmin' && role !== 'admin') { showToast('Hanya Superadmin/Admin yang dapat melakukan penyesuaian stok.', 'error'); return; }
+            const sel = document.getElementById('whSrAdjProduct');
+            if (sel) sel.innerHTML = whProductOptions('-- Silakan Pilih Produk --');
+            const f = document.getElementById('formWhSrAdjust');
+            if (f) f.reset();
+            const cur = document.getElementById('whSrAdjCurrent');
+            if (cur) cur.value = '';
+            openModal('modalWhSrAdjust');
+        }
+
+        function whSrAdjPick() {
+            const pn = (document.getElementById('whSrAdjProduct') || {}).value || '';
+            const cur = document.getElementById('whSrAdjCurrent');
+            if (!cur) return;
+            cur.value = pn ? `${whFmt(whStock(pn))} Pcs` : '';
+        }
+
+        function whSrSaveAdjust(e) {
+            e.preventDefault();
+            const user = APP_STATE.currentUser || {};
+            if (user.role !== 'superadmin' && user.role !== 'admin') { showToast('Hanya Superadmin/Admin yang dapat melakukan penyesuaian stok.', 'error'); return; }
+            const pn = (document.getElementById('whSrAdjProduct') || {}).value || '';
+            if (!pn) { showToast('Pilih produk terlebih dahulu.', 'error'); return; }
+            const prod = whFindProduct(pn);
+            const raw = whNum((document.getElementById('whSrAdjQty') || {}).value);
+            if (raw < 0) { showToast('Stok aktual tidak boleh negatif.', 'error'); return; }
+            const actual = Math.floor(raw);
+            const diff = actual - whStock(pn);
+            if (diff === 0) { showToast('Stok aktual sama dengan stok sistem — tidak ada penyesuaian.', 'info'); return; }
+            const note = ((document.getElementById('whSrAdjNote') || {}).value || '').trim();
+            const rec = {
+                id: `WH-${Date.now()}-ADJ`,
+                type: diff > 0 ? 'IN' : 'OUT',
+                date: whToday(),
+                customer: 'SYSTEM ADJUSTMENT',
+                partNo: prod ? prod.partNo : pn,
+                partName: prod ? (prod.partName || '') : '',
+                qty: Math.abs(diff),
+                note: `[ADJUSTMENT] ${note || 'Penyesuaian stok'}`.trim(),
+                pic: user.name || 'User',
+                createdAt: new Date().toISOString()
+            };
+            WH_DATA.push(rec);
+            syncToSheet('WhTx', rec);
+            persistData();
+            closeModal('modalWhSrAdjust');
+            renderWhTransaksi();
+            renderWhLedger();
+            renderWhStockReport();
+            showToast(`Penyesuaian stok berhasil: ${diff > 0 ? '+' : '-'}${whFmt(Math.abs(diff))} Pcs (${prod ? prod.partNo : pn}).`, 'success');
         }
 
         function whPrintWindow(title, pageCss, bodyHtml) {
@@ -9592,7 +9910,7 @@
             if (type === 'user') renderUsers();
             if (type === 'produk') renderMasterProducts();
             if (type === 'customer') { renderMasterCustomers(); renderMasterProducts(); }
-            if (type === 'wh-tx') { renderWhLedger(); renderWhTransaksi(); }
+            if (type === 'wh-tx') { renderWhLedger(); renderWhTransaksi(); renderWhStockReport(); }
             renderDashboard();
         }
 
