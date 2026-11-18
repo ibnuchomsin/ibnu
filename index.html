@@ -1139,7 +1139,7 @@
                                 <th class="border border-slate-200 text-xs py-2 px-2">Supplier</th>
                                 <th class="border border-slate-200 text-xs py-2 px-2">Material</th>
                                 <th class="text-center w-20 border border-slate-200 text-xs py-2 px-2">Qty</th>
-                                <th class="text-center w-32 border border-slate-200 text-xs py-2 px-2">Jam Kedatangan</th>
+                                <th class="text-center w-36 border border-slate-200 text-xs py-2 px-2">Nama Driver</th>
                                 <th class="text-center w-40 border border-slate-200 text-xs py-2 px-2">Status</th>
                                 <th class="text-center w-32 border border-slate-200 text-xs py-2 px-2">Clock In</th>
                                 <th class="text-center w-14 border border-slate-200 text-xs py-2 px-2">Hapus</th>
@@ -7187,10 +7187,15 @@
                     <td class="font-bold text-xs text-slate-800 border border-slate-100 px-2">${escapeHTML(r.ref || '-')}</td>
                     <td class="text-xs font-semibold text-slate-700 border border-slate-100 px-2">${escapeHTML(r.item || '-')}</td>
                     <td class="text-center text-xs font-bold text-slate-700 border border-slate-100 px-2">${meta.qty ? escapeHTML(meta.qty) : '<span class="text-slate-300">—</span>'}</td>
-                    <td class="text-center font-mono text-xs font-bold text-cyan-700 border border-slate-100 px-2">${meta.clockInAt ? qcClockHM(meta.clockInAt) : '<span class="text-slate-300">—</span>'}</td>
+                    <td class="text-center text-xs font-semibold text-slate-700 border border-slate-100 px-2 uppercase">${meta.driver ? escapeHTML(meta.driver) : '<span class="text-slate-300">—</span>'}</td>
                     <td class="text-center border border-slate-100 px-1 py-1">${statusCell}</td>
                     <td class="text-center border border-slate-100 px-2 py-1">
-                        <button type="button" onclick="clockInQc('${r.id}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-colors inline-flex items-center gap-1 ${meta.clockInAt ? 'bg-cyan-50 border-cyan-200 text-cyan-700 hover:bg-cyan-100' : 'bg-white border-dashed border-slate-300 text-slate-500 hover:border-cyan-400 hover:text-cyan-700'}" title="${meta.clockInAt ? 'Perbarui Clock In Kedatangan' : 'Clock In Kedatangan'}"><i class="fas fa-clock"></i> Clock In</button>
+                        ${meta.clockInAt
+                            ? `<div class="inline-flex flex-col items-center gap-1">
+                                   <span class="font-mono text-[11px] font-black text-emerald-700 leading-none" title="Jam masuk (Clock In)">${qcClockHM(meta.clockInAt)}</span>
+                                   <button type="button" onclick="clockInQc('${r.id}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600 shadow-sm shadow-emerald-500/30 transition-colors inline-flex items-center gap-1" title="Clock In tercatat ${qcClockHM(meta.clockInAt)} — klik untuk memperbarui jam"><i class="fas fa-check"></i> Clock In</button>
+                               </div>`
+                            : `<button type="button" onclick="clockInQc('${r.id}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border bg-white border-dashed border-slate-300 text-slate-500 hover:border-cyan-400 hover:text-cyan-700 transition-colors inline-flex items-center gap-1" title="Clock In Kedatangan"><i class="fas fa-clock"></i> Clock In</button>`}
                     </td>
                     <td class="text-center border border-slate-100 px-1 py-1">
                         ${bolehHapus ? `<button type="button" onclick="delQc('${r.id}', true)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus kedatangan"><i class="fas fa-trash"></i></button>` : ''}
@@ -7206,7 +7211,7 @@
                     <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full px-2 py-1.5 bg-transparent text-xs font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
                     <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="material" data-rcv-row="${n}" placeholder="Material..." class="w-full px-2 py-1.5 bg-transparent text-xs font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
                     <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="qty" data-rcv-row="${n}" placeholder="Qty" class="w-full px-2 py-1.5 bg-transparent text-center text-xs font-bold text-slate-700 outline-none uppercase placeholder:text-slate-300"></td>
-                    <td class="text-center border border-slate-100 text-slate-300 text-xs font-bold">—</td>
+                    <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="driver" data-rcv-row="${n}" placeholder="Nama Driver..." class="w-full px-2 py-1.5 bg-transparent text-center text-xs font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
                     <td class="text-center border border-slate-100 px-1 py-1">
                         <div class="inline-flex items-center gap-1 opacity-40">
                             <button type="button" disabled class="px-1.5 py-1 rounded-md text-[10px] font-black border bg-white border-slate-200 text-slate-400 cursor-not-allowed" title="Clock In dulu">OK</button>
@@ -7263,7 +7268,8 @@
                     { header: 'Supplier', key: 'supplier', width: 30 },
                     { header: 'Material', key: 'material', width: 34 },
                     { header: 'Qty', key: 'qty', width: 10 },
-                    { header: 'Jam Kedatangan', key: 'clock', width: 16 },
+                    { header: 'Nama Driver', key: 'driver', width: 22 },
+                    { header: 'Clock In', key: 'clock', width: 14 },
                     { header: 'Status', key: 'status', width: 12 }
                 ];
                 const hdr = sheet.getRow(1);
@@ -7277,6 +7283,7 @@
                     supplier: r.ref || '-',
                     material: r.item || '-',
                     qty: meta.qty || '-',
+                    driver: meta.driver || '-',
                     clock: meta.clockInAt ? qcClockHM(meta.clockInAt) : '-',
                     status: rcvBoardStatusText(r.status)
                 }));
@@ -7294,13 +7301,14 @@
             const rows = rcvBoardRows();
             if (!rows.length) return showToast('Tidak ada kedatangan material pada tanggal ini.', 'error');
             const day = (document.getElementById('rcvBoardDate') || {}).value || qcToday();
-            const data = [['No', 'Tanggal', 'Supplier', 'Material', 'Qty', 'Jam Kedatangan', 'Status']];
+            const data = [['No', 'Tanggal', 'Supplier', 'Material', 'Qty', 'Nama Driver', 'Clock In', 'Status']];
             rows.forEach(({ r, meta }, i) => data.push([
                 String(i + 1),
                 escapeCSVField(day),
                 escapeCSVField(r.ref || '-'),
                 escapeCSVField(r.item || '-'),
                 escapeCSVField(meta.qty || '-'),
+                escapeCSVField(meta.driver || '-'),
                 escapeCSVField(meta.clockInAt ? qcClockHM(meta.clockInAt) : '-'),
                 escapeCSVField(rcvBoardStatusText(r.status))
             ]));
@@ -7328,6 +7336,7 @@
             const supplier = pick('supplier');
             const material = pick('material');
             const qty = pick('qty');
+            const driver = pick('driver');
             if (!supplier || !material) return showToast('Isi Supplier dan Material dulu, lalu klik Clock In.', 'error');
             const day = document.getElementById('rcvBoardDate').value || qcToday();
             const stamp = new Date().toISOString();
@@ -7341,7 +7350,7 @@
                 param: '',
                 inspector: (APP_STATE.currentUser || {}).name || '',
                 status: '',
-                note: JSON.stringify({ text: '', qty: qty, clockInAt: stamp }),
+                note: JSON.stringify({ text: '', qty: qty, driver: driver, clockInAt: stamp }),
                 createdAt: stamp
             };
             QC_DATA.unshift(rec);
