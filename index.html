@@ -1153,32 +1153,29 @@
 
         <section id="view-qc-scan" class="p-3 md:p-5 space-y-4 hide">
             <div class="max-w-xl mx-auto w-full flex flex-col gap-3 relative">
-                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-3 flex flex-col sm:flex-row gap-2 shrink-0">
-                    <div class="flex-1 flex gap-2">
-                        <div class="w-1/2">
-                            <label class="block text-[10px] font-bold text-slate-500 mb-1">Start date</label>
-                            <input type="date" id="scanStartDate" onchange="renderScanHistory()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold">
-                        </div>
-                        <div class="w-1/2">
-                            <label class="block text-[10px] font-bold text-slate-500 mb-1">End date</label>
-                            <input type="date" id="scanEndDate" onchange="renderScanHistory()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold">
-                        </div>
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-3 flex flex-wrap items-end gap-2 shrink-0">
+                    <div class="flex-1 min-w-[110px]">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Start date</label>
+                        <input type="date" id="scanStartDate" onchange="renderScanHistory()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold">
                     </div>
-                    <div class="flex items-end justify-end gap-2">
-                        <button type="button" onclick="renderScanHistory()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-colors flex-1 sm:flex-none"><i class="fas fa-filter mr-1"></i> FILTER</button>
-                        <div class="relative flex-1 sm:flex-none">
-                            <button type="button" onclick="toggleScanExportMenu(event)" class="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1.5" title="Export riwayat scan sesuai filter tanggal">
-                                <i class="fas fa-file-export"></i> EXPORT <i class="fas fa-chevron-down text-[9px]"></i>
-                            </button>
-                            <div id="scanExportMenu" class="hide absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-30 overflow-hidden">
-                                <button type="button" onclick="exportScansExcel()" class="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2"><i class="fas fa-file-excel text-emerald-600"></i> Excel (.xlsx)</button>
-                                <button type="button" onclick="exportScansCSV()" class="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 border-t border-slate-100"><i class="fas fa-file-csv text-blue-600"></i> CSV (.csv)</button>
-                            </div>
-                        </div>
+                    <div class="flex-1 min-w-[110px]">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">End date</label>
+                        <input type="date" id="scanEndDate" onchange="renderScanHistory()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold">
                     </div>
-                    <div class="relative w-full sm:border-t sm:border-slate-100 sm:pt-2">
-                        <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                        <input type="text" id="scanPicSearch" placeholder="Cari PIC scan (nama)..." oninput="scanPicSearchDebounce()" maxlength="60" autocomplete="off" class="w-full text-xs border border-slate-200 rounded-lg pl-8 pr-3 py-2 bg-slate-50 outline-none font-semibold focus:border-blue-500">
+                    <div class="relative flex-1 min-w-[130px]">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">PIC</label>
+                        <i class="fas fa-user absolute left-2.5 bottom-2 text-slate-400 text-xs"></i>
+                        <input type="text" id="scanPicSearch" placeholder="Cari PIC..." oninput="scanPicSearchDebounce()" maxlength="60" autocomplete="off" class="w-full text-xs border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-blue-500">
+                    </div>
+                    <button type="button" onclick="renderScanHistory()" title="Terapkan Filter" class="bg-blue-500 hover:bg-blue-600 text-white w-9 h-[34px] rounded-lg text-sm transition-colors flex items-center justify-center shrink-0"><i class="fas fa-magnifying-glass"></i></button>
+                    <div class="relative shrink-0">
+                        <button type="button" onclick="toggleScanExportMenu(event)" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 h-[34px]" title="Export riwayat scan sesuai filter">
+                            <i class="fas fa-file-export"></i> EXPORT <i class="fas fa-chevron-down text-[9px]"></i>
+                        </button>
+                        <div id="scanExportMenu" class="hide absolute right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-30 overflow-hidden">
+                            <button type="button" onclick="exportScansExcel()" class="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 flex items-center gap-2"><i class="fas fa-file-excel text-emerald-600"></i> Excel (.xlsx)</button>
+                            <button type="button" onclick="exportScansCSV()" class="w-full text-left px-3 py-2.5 text-xs font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 border-t border-slate-100"><i class="fas fa-file-csv text-blue-600"></i> CSV (.csv)</button>
+                        </div>
                     </div>
                 </div>
                 <form id="qcScanForm" onsubmit="saveScan(event)" class="flex gap-2 bg-white p-3 rounded-2xl shadow-sm border border-slate-200/80 shrink-0">
