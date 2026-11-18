@@ -1176,6 +1176,10 @@
                             </div>
                         </div>
                     </div>
+                    <div class="relative w-full sm:border-t sm:border-slate-100 sm:pt-2">
+                        <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="scanPicSearch" placeholder="Cari PIC scan (nama)..." oninput="scanPicSearchDebounce()" maxlength="60" autocomplete="off" class="w-full text-xs border border-slate-200 rounded-lg pl-8 pr-3 py-2 bg-slate-50 outline-none font-semibold focus:border-blue-500">
+                    </div>
                 </div>
                 <form id="qcScanForm" onsubmit="saveScan(event)" class="flex gap-2 bg-white p-3 rounded-2xl shadow-sm border border-slate-200/80 shrink-0">
                     <input type="text" id="manualScanInput" class="flex-1 text-sm border border-blue-300 rounded-lg px-3 py-2 focus:border-blue-500 bg-slate-50 font-mono outline-none" placeholder="QR Code / Barcode" required autocomplete="off" maxlength="500" inputmode="text">
@@ -8684,11 +8688,19 @@
         function scanFilteredRows() {
             const start = (document.getElementById('scanStartDate') || {}).value || '';
             const end = (document.getElementById('scanEndDate') || {}).value || '';
+            const pic = ((document.getElementById('scanPicSearch') || {}).value || '').trim().toLowerCase();
             let filtered = QC_DATA.filter(x => x.category === 'scan');
             if (start) filtered = filtered.filter(item => String(item.date || '') >= start);
             if (end) filtered = filtered.filter(item => String(item.date || '') <= end);
+            if (pic) filtered = filtered.filter(item => String(item.pic || '').toLowerCase().includes(pic));
             filtered.sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
             return filtered;
+        }
+
+        let scanPicTimer = null;
+        function scanPicSearchDebounce() {
+            clearTimeout(scanPicTimer);
+            scanPicTimer = setTimeout(() => renderScanHistory(), 300);
         }
 
         function closeScanExportMenu() {
@@ -8766,9 +8778,10 @@
             const container = document.getElementById('qcScanHistory');
             if (!container) return;
             const filtered = scanFilteredRows();
+            const picQ = ((document.getElementById('scanPicSearch') || {}).value || '').trim();
             const bolehHapus = bolehHapusData();
             container.innerHTML = filtered.length === 0
-                ? '<p class="text-center text-slate-400 text-xs font-bold py-10">Belum ada riwayat scan.</p>'
+                ? `<p class="text-center text-slate-400 text-xs font-bold py-10">${picQ ? 'Tidak ada riwayat scan untuk PIC "' + escapeHTML(picQ) + '" pada filter ini.' : 'Belum ada riwayat scan.'}</p>`
                 : filtered.map(item => `
                     <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col relative pr-10">
                         <p class="text-sm font-extrabold text-slate-700 leading-tight mb-2 break-all">${escapeHTML(item.ref || '')}</p>
