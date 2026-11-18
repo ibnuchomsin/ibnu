@@ -7195,7 +7195,7 @@
                             : `<button type="button" onclick="clockInQc('${r.id}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border bg-white border-dashed border-slate-300 text-slate-500 hover:border-cyan-400 hover:text-cyan-700 transition-colors inline-flex items-center gap-1" title="Clock In Kedatangan"><i class="fas fa-clock"></i> Clock In</button>`}
                     </td>
                     <td class="text-center border border-slate-100 px-1 py-1">
-                        ${bolehHapus ? `<button type="button" onclick="delQc('${r.id}', true)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus kedatangan"><i class="fas fa-trash"></i></button>` : ''}
+                        <button type="button" onclick="delQc('${r.id}', true)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus kedatangan"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
             }).join('');
@@ -10168,6 +10168,7 @@
             const peran = (APP_STATE.currentUser || {}).role || '';
             const diizinkan = type === 'user' ? peran === 'superadmin'
                 : (type === 'produk' || type === 'customer') ? ['superadmin', 'admin'].includes(peran)
+                : type === 'qc' ? true   // Papan Material Receipt: semua peran boleh hapus kedatangan
                 : bolehHapusData();
             if (!diizinkan) {
                 closeModal('deleteModal');

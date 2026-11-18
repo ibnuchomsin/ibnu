@@ -1091,6 +1091,10 @@ case 'deleteRecord': {
         if ($role !== 'superadmin') fail('Tidak diizinkan: hapus akun hanya untuk Superadmin.', 403);
     } else if ($sheet === 'Products' || $sheet === 'Customers') {
         if (!in_array($role, ['superadmin', 'admin'], true)) fail('Tidak diizinkan: Master Data hanya untuk Admin.', 403);
+    } else if ($sheet === 'Qc') {
+        // Papan Material Receipt: semua peran yang login boleh menghapus data QC/kedatangan
+        // (permintaan pemilik). Menu lain tetap memakai aturan peran di bawah.
+        if ($role === '') fail('Tidak diizinkan: sesi tidak valid.', 403);
     } else if (!in_array($role, ['superadmin', 'admin', 'manager', 'supervisor', 'officer'], true)) {
         fail('Tidak diizinkan: peranmu tidak berhak menghapus data.', 403);
     }
