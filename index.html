@@ -7201,27 +7201,40 @@
                     </td>
                 </tr>`;
             }).join('');
-            const total = Math.max(rcvBoardSlots, rows.length);
+            const total = Math.max(rcvBoardSlots, rows.length + 1);
             let blanks = '';
             for (let n = rows.length + 1; n <= total; n++) {
                 blanks += `
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center text-xs font-bold border border-slate-100 text-slate-400">${n}</td>
-                    <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full px-2 py-1.5 bg-transparent text-xs font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
-                    <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="material" data-rcv-row="${n}" placeholder="Material..." class="w-full px-2 py-1.5 bg-transparent text-xs font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
-                    <td class="border border-slate-100 px-1"><input type="text" data-rcv-field="qty" data-rcv-row="${n}" placeholder="Qty" class="w-full px-2 py-1.5 bg-transparent text-center text-xs font-bold text-slate-700 outline-none uppercase placeholder:text-slate-300"></td>
-                    <td class="border border-slate-100 px-0.5"><input type="text" data-rcv-field="driver" data-rcv-row="${n}" placeholder="Driver..." class="w-full px-1 py-1.5 bg-transparent text-center text-[11px] font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
-                    <td class="border border-slate-100 px-0.5"><input type="text" data-rcv-field="car" data-rcv-row="${n}" placeholder="Mobil..." class="w-full px-1 py-1.5 bg-transparent text-center text-[11px] font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
-                    <td class="text-center border border-slate-100 px-1 py-1">
+                    <td class="border border-slate-100 px-1 align-top py-1"><input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full px-2 py-1.5 bg-transparent text-xs font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
+                    <td class="border border-slate-100 px-1 align-top py-1">
+                        <div class="flex flex-col gap-0.5" data-rcv-mat-wrap="${n}">
+                            <div class="flex items-center gap-0.5" data-rcv-line="1">
+                                <input type="text" data-rcv-field="material" data-rcv-row="${n}" placeholder="Material..." class="w-full min-w-0 flex-1 px-1.5 py-1.5 bg-transparent text-xs font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold">
+                                <button type="button" onclick="rcvBoardAddMaterial(${n})" class="shrink-0 w-5 h-5 inline-flex items-center justify-center text-cyan-600 hover:text-white hover:bg-cyan-500 bg-cyan-50 border border-cyan-200 rounded transition-colors" title="Tambah material lain (supplier bawa lebih dari 1 jenis material)"><i class="fas fa-plus text-[9px]"></i></button>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="border border-slate-100 px-1 align-top py-1">
+                        <div class="flex flex-col gap-0.5" data-rcv-qty-wrap="${n}">
+                            <div class="flex items-center" data-rcv-line="1">
+                                <input type="text" data-rcv-field="qty" data-rcv-row="${n}" placeholder="Qty" class="w-full px-1.5 py-1.5 bg-transparent text-center text-xs font-bold text-slate-700 outline-none uppercase placeholder:text-slate-300">
+                            </div>
+                        </div>
+                    </td>
+                    <td class="border border-slate-100 px-0.5 align-top py-1"><input type="text" data-rcv-field="driver" data-rcv-row="${n}" placeholder="Driver..." class="w-full px-1 py-1.5 bg-transparent text-center text-[11px] font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
+                    <td class="border border-slate-100 px-0.5 align-top py-1"><input type="text" data-rcv-field="car" data-rcv-row="${n}" placeholder="Mobil..." class="w-full px-1 py-1.5 bg-transparent text-center text-[11px] font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
+                    <td class="text-center border border-slate-100 px-1 align-top py-1">
                         <div class="inline-flex items-center gap-0.5 opacity-40">
                             <button type="button" disabled class="px-1.5 py-0.5 rounded-md text-[9px] font-black border bg-white border-slate-200 text-slate-400 cursor-not-allowed" title="Clock In dulu">OK</button>
                             <button type="button" disabled class="px-1.5 py-0.5 rounded-md text-[9px] font-black border bg-white border-slate-200 text-slate-400 cursor-not-allowed" title="Clock In dulu">TIDAK OK</button>
                         </div>
                     </td>
-                    <td class="text-center border border-slate-100 px-2 py-1">
+                    <td class="text-center border border-slate-100 px-2 align-top py-1">
                         <button type="button" onclick="rcvBoardClockIn(${n})" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border bg-white border-dashed border-slate-300 text-slate-500 hover:border-cyan-400 hover:text-cyan-700 transition-colors inline-flex items-center gap-1" title="Simpan kedatangan & Clock In"><i class="fas fa-clock"></i> Clock In</button>
                     </td>
-                    <td class="text-center border border-slate-100 px-1 py-1">
+                    <td class="text-center border border-slate-100 px-1 align-top py-1">
                         <button type="button" onclick="rcvBoardRemoveRow()" class="text-slate-400 hover:text-red-600 bg-slate-100 hover:bg-red-50 p-1.5 rounded transition-colors" title="Hapus baris ini"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>`;
@@ -7331,37 +7344,101 @@
             if (icon) icon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
         });
 
+        /* Tambah / hapus baris material pada satu kedatangan (supplier bawa 2, 3, 4 jenis material).
+           Material & Qty ditumpuk sejajar; saat Clock In semua material disimpan sebagai baris terpisah
+           dengan Supplier, Driver, Mobil, dan jam masuk yang sama. */
+        const RCV_MAT_MAX = 8;
+
+        function rcvBoardAddMaterial(rowNo) {
+            const matWrap = document.querySelector(`[data-rcv-mat-wrap="${rowNo}"]`);
+            const qtyWrap = document.querySelector(`[data-rcv-qty-wrap="${rowNo}"]`);
+            if (!matWrap || !qtyWrap) return;
+            const jumlah = matWrap.querySelectorAll('[data-rcv-line]').length;
+            if (jumlah >= RCV_MAT_MAX) return showToast(`Maksimal ${RCV_MAT_MAX} jenis material dalam satu kedatangan.`, 'error');
+            const n = jumlah + 1;
+
+            const matLine = document.createElement('div');
+            matLine.className = 'flex items-center gap-0.5';
+            matLine.setAttribute('data-rcv-line', String(n));
+            matLine.innerHTML = `<input type="text" data-rcv-field="material" data-rcv-row="${rowNo}" placeholder="Material ${n}..." class="w-full min-w-0 flex-1 px-1.5 py-1.5 bg-transparent text-xs font-semibold text-slate-700 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"><button type="button" onclick="rcvBoardRemoveMaterial(${rowNo}, this)" class="shrink-0 w-5 h-5 inline-flex items-center justify-center text-red-500 hover:text-white hover:bg-red-500 bg-red-50 border border-red-200 rounded transition-colors" title="Hapus material ini"><i class="fas fa-times text-[9px]"></i></button>`;
+            matWrap.appendChild(matLine);
+
+            const qtyLine = document.createElement('div');
+            qtyLine.className = 'flex items-center';
+            qtyLine.setAttribute('data-rcv-line', String(n));
+            qtyLine.innerHTML = `<input type="text" data-rcv-field="qty" data-rcv-row="${rowNo}" placeholder="Qty" class="w-full px-1.5 py-1.5 bg-transparent text-center text-xs font-bold text-slate-700 outline-none uppercase placeholder:text-slate-300">`;
+            qtyWrap.appendChild(qtyLine);
+
+            const inp = matLine.querySelector('input');
+            if (inp) inp.focus();
+        }
+
+        function rcvBoardRemoveMaterial(rowNo, btn) {
+            const lineEl = btn.closest('[data-rcv-line]');
+            if (!lineEl || lineEl.getAttribute('data-rcv-line') === '1') return;
+            const idx = lineEl.getAttribute('data-rcv-line');
+            const matWrap = document.querySelector(`[data-rcv-mat-wrap="${rowNo}"]`);
+            const qtyWrap = document.querySelector(`[data-rcv-qty-wrap="${rowNo}"]`);
+            if (qtyWrap) {
+                const q = qtyWrap.querySelector(`[data-rcv-line="${idx}"]`);
+                if (q) q.remove();
+            }
+            lineEl.remove();
+            // rapikan penomoran + placeholder setelah satu baris dihapus
+            if (matWrap) [...matWrap.querySelectorAll('[data-rcv-line]')].forEach((el, i) => {
+                el.setAttribute('data-rcv-line', String(i + 1));
+                const inp = el.querySelector('input');
+                if (inp && i > 0) inp.placeholder = `Material ${i + 1}...`;
+            });
+            if (qtyWrap) [...qtyWrap.querySelectorAll('[data-rcv-line]')].forEach((el, i) => el.setAttribute('data-rcv-line', String(i + 1)));
+        }
+
         function rcvBoardClockIn(rowNo) {
             const pick = f => {
                 const el = document.querySelector(`[data-rcv-field="${f}"][data-rcv-row="${rowNo}"]`);
                 return el ? sanitizeInput(el.value).toUpperCase() : '';
             };
             const supplier = pick('supplier');
-            const material = pick('material');
-            const qty = pick('qty');
             const driver = pick('driver');
             const car = pick('car');
-            if (!supplier || !material) return showToast('Isi Supplier dan Material dulu, lalu klik Clock In.', 'error');
+
+            // Semua material pada baris ini (baris pertama + hasil tombol +)
+            const matEls = [...document.querySelectorAll(`[data-rcv-field="material"][data-rcv-row="${rowNo}"]`)];
+            const qtyEls = [...document.querySelectorAll(`[data-rcv-field="qty"][data-rcv-row="${rowNo}"]`)];
+            const items = matEls
+                .map((el, i) => ({
+                    material: sanitizeInput(el.value).toUpperCase(),
+                    qty: qtyEls[i] ? sanitizeInput(qtyEls[i].value).toUpperCase() : ''
+                }))
+                .filter(x => x.material);
+
+            if (!supplier || !items.length) return showToast('Isi Supplier dan Material dulu, lalu klik Clock In.', 'error');
+
             const day = document.getElementById('rcvBoardDate').value || qcToday();
             const stamp = new Date().toISOString();
-            const rec = {
-                id: 'QCR-' + Date.now(),
+            const base = Date.now();
+            const inspector = (APP_STATE.currentUser || {}).name || '';
+            const recs = items.map((it, i) => ({
+                id: 'QCR-' + (base + i),
                 category: 'receiving',
                 date: day,
                 time: '',
                 ref: supplier,
-                item: material,
+                item: it.material,
                 param: '',
-                inspector: (APP_STATE.currentUser || {}).name || '',
+                inspector,
                 status: '',
-                note: JSON.stringify({ text: '', qty: qty, driver: driver, car: car, clockInAt: stamp }),
+                note: JSON.stringify({ text: '', qty: it.qty, driver: driver, car: car, clockInAt: stamp }),
                 createdAt: stamp
-            };
-            QC_DATA.unshift(rec);
-            syncToSheet('Qc', rec);
+            }));
+
+            QC_DATA.unshift(...recs);
+            recs.forEach(r => syncToSheet('Qc', r));
             persistData();
             renderQcTables();
-            showToast(`Kedatangan ${supplier} tercatat ${qcClockHM(stamp)} — pilih status OK / TIDAK OK.`, 'success');
+            showToast(items.length > 1
+                ? `${items.length} material dari ${supplier} tercatat ${qcClockHM(stamp)} — pilih status OK / TIDAK OK per material.`
+                : `Kedatangan ${supplier} tercatat ${qcClockHM(stamp)} — pilih status OK / TIDAK OK.`, 'success');
         }
 
         /* ---------- BAP Receiving: Berita Acara Penolakan Material ---------- */
