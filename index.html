@@ -1136,7 +1136,7 @@
                         <thead class="bg-slate-50">
                             <tr>
                                 <th class="w-10 text-center border border-slate-200 text-xs py-2 px-2">No</th>
-                                <th class="border border-slate-200 text-xs py-2 px-2">Supplier</th>
+                                <th class="lg:w-[22%] border border-slate-200 text-xs py-2 px-1.5">Supplier</th>
                                 <th class="border border-slate-200 text-xs py-2 px-2">Material</th>
                                 <th class="text-center w-20 border border-slate-200 text-xs py-2 px-2">Qty</th>
                                 <th class="text-center w-24 border border-slate-200 text-xs py-2 px-1">Driver</th>
@@ -7182,16 +7182,16 @@
             const html = rows.map(({ r, meta }, i) => {
                 const statusCell = (r.status === 'PASS' || r.status === 'NG')
                     ? (r.status === 'PASS'
-                        ? '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-black bg-emerald-500 text-white shadow-sm" title="Status terkunci: OK"><i class="fas fa-check"></i> OK</span>'
-                        : '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[9px] font-black bg-red-600 text-white shadow-sm" title="Status terkunci: TIDAK OK"><i class="fas fa-times"></i> TIDAK OK</span>')
+                        ? '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black bg-emerald-500 text-white shadow-sm whitespace-nowrap" title="Status terkunci: OK"><i class="fas fa-check text-[14px] leading-none"></i> OK</span>'
+                        : '<span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black bg-red-600 text-white shadow-sm whitespace-nowrap" title="Status terkunci: TIDAK OK"><i class="fas fa-times text-[14px] leading-none"></i> TIDAK OK</span>')
                     : `<div class="inline-flex items-center gap-0.5">
-                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', true)" class="px-1.5 py-0.5 rounded-md text-[9px] font-black border transition-colors bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-500 hover:text-white" title="Tandai OK">OK</button>
-                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', false)" class="px-1.5 py-0.5 rounded-md text-[9px] font-black border transition-colors bg-white border-red-200 text-red-600 hover:bg-red-600 hover:text-white" title="Tandai Tidak OK">TIDAK OK</button>
+                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', true)" class="px-1.5 py-0.5 rounded-md text-[9px] font-black border transition-colors bg-white border-emerald-200 text-emerald-600 hover:bg-emerald-500 hover:text-white whitespace-nowrap" title="Tandai OK">OK</button>
+                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', false)" class="px-1.5 py-0.5 rounded-md text-[9px] font-black border transition-colors bg-white border-red-200 text-red-600 hover:bg-red-600 hover:text-white whitespace-nowrap" title="Tandai Tidak OK">TIDAK OK</button>
                         </div>`;
                 return `
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center text-xs font-bold border border-slate-100">${i + 1}</td>
-                    <td class="font-bold text-xs text-slate-800 border border-slate-100 px-2">${escapeHTML(r.ref || '-')}</td>
+                    <td class="font-bold text-[11px] text-slate-800 border border-slate-100 px-1.5">${escapeHTML(r.ref || '-')}</td>
                     <td class="text-xs font-semibold text-slate-700 border border-slate-100 px-2">${escapeHTML(r.item || '-')}</td>
                     <td class="text-center text-xs font-bold text-slate-700 border border-slate-100 px-2">${meta.qty ? escapeHTML(meta.qty) : '<span class="text-slate-300">—</span>'}</td>
                     <td class="text-center text-[11px] font-semibold text-slate-700 border border-slate-100 px-1 uppercase">${meta.driver ? escapeHTML(meta.driver) : '<span class="text-slate-300">—</span>'}</td>
@@ -7213,7 +7213,7 @@
                 blanks += `
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center text-xs font-bold border border-slate-100 text-slate-400">${n}</td>
-                    <td class="border border-slate-100 px-1 align-top py-1"><input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full px-2 py-1.5 bg-transparent text-xs font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
+                    <td class="border border-slate-100 px-1 align-top py-1"><input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full px-1.5 py-1.5 bg-transparent text-[11px] font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
                     <td class="border border-slate-100 px-1 align-top py-1">
                         <div class="flex flex-col gap-0.5" data-rcv-mat-wrap="${n}">
                             <div class="flex items-center gap-0.5" data-rcv-line="1">
