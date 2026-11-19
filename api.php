@@ -623,6 +623,7 @@ case 'login': {
                 'channels'    => $mfaCh['allowed'],
                 'target'      => $issued['target'],
                 'ttl'         => $issued['ttl'],
+                'cooldown'    => max(5, (int)kaizenMfaConfig()['resend_cooldown_seconds']),
                 'message'     => 'Kode verifikasi dikirim ke ' . $issued['target'],
             ]);
         }
@@ -711,15 +712,29 @@ case 'mfa_send': {
     // Rate limit pengiriman ulang
     $cfg      = kaizenMfaConfig();
     $cooldown = max(5, (int)$cfg['resend_cooldown_seconds']);
-    $q = $DB->query('SELECT channel, created_at FROM mfa_codes WHERE user_id = ' . "'" . $DB->real_escape_string($uid) . "'" . ' ORDER BY id DESC LIMIT 1');
+    // Umur kode dihitung di MySQL agar tidak terpengaruh beda zona waktu PHP vs MySQL.
+    $q = $DB->query(
+        'SELECT channel, created_at, TIMESTAMPDIFF(SECOND, created_at, NOW()) AS umur'
+        . ' FROM mfa_codes WHERE user_id = ' . "'" . $DB->real_escape_string($uid) . "'"
+        . ' ORDER BY id DESC LIMIT 1'
+    );
     $last = $q ? $q->fetch_assoc() : null;
     if ($q) $q->close();
     if ($last) {
-        $elapsed = time() - strtotime((string)$last['created_at']);
+        $elapsed = (int)($last['umur'] ?? 0);
+        if ($elapsed < 0) $elapsed = 0;
         // Cooldown hanya untuk channel yang sama; ganti channel boleh langsung
         // (kode lama otomatis dimatikan saat kode baru diterbitkan).
         if ($elapsed < $cooldown && (string)$last['channel'] === $channel) {
-            fail('Tunggu ' . ($cooldown - $elapsed) . ' detik sebelum meminta kode lagi.', 429);
+            $sisa = max(1, $cooldown - $elapsed);
+            http_response_code(429);
+            respond([
+                'ok'         => false,
+                'error'      => 'Tunggu ' . $sisa . ' detik sebelum meminta kode lagi.',
+                'code'       => 'MFA_COOLDOWN',
+                'retryAfter' => $sisa,
+                'cooldown'   => $cooldown,
+            ]);
         }
     }
 
@@ -730,6 +745,7 @@ case 'mfa_send': {
         'channel' => $issued['channel'],
         'target'  => $issued['target'],
         'ttl'     => $issued['ttl'],
+        'cooldown' => $cooldown,
         'message' => 'Kode baru dikirim ke ' . $issued['target'],
     ]);
 }

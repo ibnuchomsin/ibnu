@@ -3919,7 +3919,7 @@
             el('mfaTargetInfo').textContent = MFA_STATE.target;
             el('mfaChannelBox').classList.toggle('hide', MFA_STATE.channels.length <= 1);
             updateMfaChannelUi();
-            mfaStartResendCooldown(Math.min(45, 30));
+            mfaStartResendCooldown(Number(res.cooldown) > 0 ? Number(res.cooldown) : 60);
             el('mfaCode').focus();
         }
 
@@ -4009,11 +4009,17 @@
                     }
                     if (res.ttl) document.getElementById('mfaTtlInfo').textContent = res.ttl;
                     showToast('Kode baru dikirim ke ' + res.target, 'success');
-                    mfaStartResendCooldown(30);
+                    mfaStartResendCooldown(Number(res.cooldown) > 0 ? Number(res.cooldown) : 60);
                 } else {
                     btn.disabled = false;
-                    mfaError(res.error || 'Gagal mengirim kode.');
-                    if (res.status === 429) mfaStartResendCooldown(30);
+                    if (res.code === 'MFA_COOLDOWN' || res.status === 429) {
+                        // Bukan error: cukup tampilkan hitungan mundur di tombol
+                        const sisa = Number(res.retryAfter) > 0 ? Number(res.retryAfter)
+                            : (Number(res.cooldown) > 0 ? Number(res.cooldown) : 60);
+                        mfaStartResendCooldown(sisa);
+                    } else {
+                        mfaError(res.error || 'Gagal mengirim kode.');
+                    }
                 }
             })
             .catch(function() { btn.disabled = false; mfaError('Server tidak dapat dihubungi.'); });

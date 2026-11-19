@@ -25,7 +25,7 @@ function kaizenMfaConfig(): array
             'debug' => true, 'from_email' => '', 'from_name' => 'KAIZEN Portal',
             'smtp_host' => '', 'smtp_port' => 587, 'smtp_user' => '', 'smtp_pass' => '',
             'wa_gateway' => 'fonnte', 'wa_token' => '',
-            'code_ttl_minutes' => 5, 'resend_cooldown_seconds' => 30,
+            'code_ttl_minutes' => 5, 'resend_cooldown_seconds' => 60,
             'max_attempts' => 5, 'device_days' => 30,
         ];
     }
