@@ -7172,45 +7172,73 @@
 
         const rcvBoardStatusText = s => (s === 'PASS' ? 'OK' : s === 'NG' ? 'TIDAK OK' : '-');
 
+        /* Satu kedatangan = satu baris: material hasil tombol + digabung per Clock In */
+        function rcvBoardGroups() {
+            const map = new Map();
+            rcvBoardRows().forEach(item => {
+                const key = item.meta.clockInAt
+                    ? `${item.meta.clockInAt}|${item.r.ref || ''}|${item.r.inspector || ''}`
+                    : `id:${item.r.id}`;
+                if (!map.has(key)) map.set(key, { key, items: [] });
+                map.get(key).items.push(item);
+            });
+            return [...map.values()];
+        }
+
+        function rcvStatusBadge(r) {
+            if (r.status === 'PASS' || r.status === 'NG') {
+                return r.status === 'PASS'
+                    ? '<span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-emerald-500 text-white shadow-sm whitespace-nowrap" title="Status terkunci: OK"><i class="fas fa-check text-[17px] leading-none"></i> OK</span>'
+                    : '<span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-red-600 text-white shadow-sm whitespace-nowrap" title="Status terkunci: TIDAK OK"><i class="fas fa-times text-[17px] leading-none"></i> TIDAK OK</span>';
+            }
+            return `<div class="flex items-center justify-center gap-1">
+                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', true)" class="w-6 h-6 inline-flex items-center justify-center rounded-md border transition-colors bg-white border-emerald-300 text-emerald-600 hover:bg-emerald-500 hover:text-white shadow-sm" title="Tandai OK"><i class="fas fa-check text-[15px] leading-none"></i></button>
+                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', false)" class="w-6 h-6 inline-flex items-center justify-center rounded-md border transition-colors bg-white border-red-300 text-red-600 hover:bg-red-600 hover:text-white shadow-sm" title="Tandai Tidak OK"><i class="fas fa-times text-[15px] leading-none"></i></button>
+                        </div>`;
+        }
+
         function renderRcvBoard() {
             const body = document.getElementById('rcvBoardBody');
             if (!body) return;
             const dateEl = document.getElementById('rcvBoardDate');
             if (dateEl && !dateEl.value) dateEl.value = qcToday();
-            const rows = rcvBoardRows();
+            const groups = rcvBoardGroups();
             const bolehHapus = bolehHapusData();
-            const html = rows.map(({ r, meta }, i) => {
-                const statusTone = r.status === 'PASS' ? 'bg-emerald-100' : (r.status === 'NG' ? 'bg-red-100' : '');
-                const statusCell = (r.status === 'PASS' || r.status === 'NG')
-                    ? (r.status === 'PASS'
-                        ? '<span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-emerald-500 text-white shadow-sm whitespace-nowrap" title="Status terkunci: OK"><i class="fas fa-check text-[17px] leading-none"></i> OK</span>'
-                        : '<span class="inline-flex items-center justify-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-red-600 text-white shadow-sm whitespace-nowrap" title="Status terkunci: TIDAK OK"><i class="fas fa-times text-[17px] leading-none"></i> TIDAK OK</span>')
-                    : `<div class="flex items-center justify-center gap-1">
-                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', true)" class="w-6 h-6 inline-flex items-center justify-center rounded-md border transition-colors bg-white border-emerald-300 text-emerald-600 hover:bg-emerald-500 hover:text-white shadow-sm" title="Tandai OK"><i class="fas fa-check text-[15px] leading-none"></i></button>
-                            <button type="button" onclick="rcvBoardSetStatus('${r.id}', false)" class="w-6 h-6 inline-flex items-center justify-center rounded-md border transition-colors bg-white border-red-300 text-red-600 hover:bg-red-600 hover:text-white shadow-sm" title="Tandai Tidak OK"><i class="fas fa-times text-[15px] leading-none"></i></button>
-                        </div>`;
+            const html = groups.map((g, i) => {
+                const items = g.items;
+                const first = items[0];
+                const meta = first.meta;
+                const statuses = items.map(it => it.r.status);
+                const semuaOk = statuses.every(s => s === 'PASS');
+                const semuaNg = statuses.every(s => s === 'NG');
+                const campur = !semuaOk && !semuaNg;
+                const statusTone = semuaOk ? 'bg-emerald-100' : (semuaNg ? 'bg-red-100' : '');
+                const baris = (isi, cls = '') => `<div class="flex items-center justify-center h-7 ${cls}">${isi}</div>`;
+                const materialLines = items.map(it => `<div class="flex items-center h-7 px-2 text-xs font-semibold text-slate-700 uppercase">${escapeHTML(it.r.item || '-')}</div>`).join('');
+                const qtyLines = items.map(it => baris(it.meta.qty ? escapeHTML(it.meta.qty) : '<span class="text-slate-300">—</span>')).join('');
+                const statusLines = items.map(it => {
+                    const nada = campur ? (it.r.status === 'PASS' ? ' bg-emerald-100 rounded-md' : it.r.status === 'NG' ? ' bg-red-100 rounded-md' : '') : '';
+                    return `<div class="flex items-center justify-center h-7${nada}">${rcvStatusBadge(it.r)}</div>`;
+                }).join('');
+                const idList = items.map(it => it.r.id).join(',');
                 return `
                 <tr class="hover:bg-amber-50/40">
-                    <td class="text-center text-xs font-bold border border-slate-100">${i + 1}</td>
-                    <td class="font-bold text-[11px] text-slate-800 border border-slate-100 px-1.5">${escapeHTML(r.ref || '-')}</td>
-                    <td class="text-xs font-semibold text-slate-700 border border-slate-100 px-2">${escapeHTML(r.item || '-')}</td>
-                    <td class="text-center text-xs font-bold text-slate-700 border border-slate-100 px-2">${meta.qty ? escapeHTML(meta.qty) : '<span class="text-slate-300">—</span>'}</td>
-                    <td class="text-center text-[11px] font-semibold text-slate-700 border border-slate-100 px-1 uppercase">${meta.driver ? escapeHTML(meta.driver) : '<span class="text-slate-300">—</span>'}</td>
-                    <td class="text-center text-[11px] font-semibold text-slate-700 border border-slate-100 px-1 uppercase">${meta.car ? escapeHTML(meta.car) : '<span class="text-slate-300">—</span>'}</td>
-                    <td class="text-center border border-slate-100 px-0.5 py-1 ${statusTone}">${statusCell}</td>
-                    <td class="text-center border border-slate-100 px-2 py-1">
-                        ${meta.clockInAt
-                            ? `<span class="font-mono text-xs font-black text-emerald-700" title="Jam masuk (Clock In)">${qcClockHM(meta.clockInAt)}</span>`
-                            : `<button type="button" onclick="clockInQc('${r.id}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border bg-white border-dashed border-slate-300 text-slate-500 hover:border-cyan-400 hover:text-cyan-700 transition-colors inline-flex items-center gap-1" title="Clock In Kedatangan"><i class="fas fa-clock"></i> Clock In</button>`}
-                    </td>
-                    <td class="text-center border border-slate-100 px-1 py-1">
-                        <button type="button" onclick="delQc('${r.id}', true)" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus kedatangan"><i class="fas fa-trash"></i></button>
-                    </td>
+                    <td class="text-center border border-slate-100 align-top py-1">${baris(`<span class="text-xs font-bold">${i + 1}</span>`)}</td>
+                    <td class="font-bold text-[11px] text-slate-800 border border-slate-100 px-1.5 align-top py-1"><div class="flex items-center h-7 uppercase">${escapeHTML(first.r.ref || '-')}</div></td>
+                    <td class="border border-slate-100 align-top py-1">${materialLines}</td>
+                    <td class="border border-slate-100 align-top py-1">${qtyLines}</td>
+                    <td class="text-center text-[11px] font-semibold text-slate-700 border border-slate-100 px-1 uppercase align-top py-1">${baris(meta.driver ? escapeHTML(meta.driver) : '<span class="text-slate-300">—</span>')}</td>
+                    <td class="text-center text-[11px] font-semibold text-slate-700 border border-slate-100 px-1 uppercase align-top py-1">${baris(meta.car ? escapeHTML(meta.car) : '<span class="text-slate-300">—</span>')}</td>
+                    <td class="text-center border border-slate-100 px-0.5 align-top py-1 ${statusTone}">${statusLines}</td>
+                    <td class="text-center border border-slate-100 px-2 align-top py-1">${baris(meta.clockInAt
+                        ? `<span class="font-mono text-xs font-black text-emerald-700" title="Jam masuk (Clock In)">${qcClockHM(meta.clockInAt)}</span>`
+                        : `<button type="button" onclick="clockInQc('${first.r.id}')" class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border bg-white border-dashed border-slate-300 text-slate-500 hover:border-cyan-400 hover:text-cyan-700 transition-colors inline-flex items-center gap-1" title="Clock In Kedatangan"><i class="fas fa-clock"></i> Clock In</button>`)}</td>
+                    <td class="text-center border border-slate-100 px-1 align-top py-1">${baris(`<button type="button" onclick="rcvBoardDeleteGroup('${idList}')" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded" title="Hapus kedatangan"><i class="fas fa-trash"></i></button>`)}</td>
                 </tr>`;
             }).join('');
-            const total = Math.max(rcvBoardSlots, rows.length + 1);
+            const total = Math.max(rcvBoardSlots, groups.length + 1);
             let blanks = '';
-            for (let n = rows.length + 1; n <= total; n++) {
+            for (let n = groups.length + 1; n <= total; n++) {
                 blanks += `
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center text-xs font-bold border border-slate-100 text-slate-400">${n}</td>
@@ -7268,11 +7296,17 @@
         }
 
         function rcvBoardRemoveRow() {
-            const day = (document.getElementById('rcvBoardDate') || {}).value || qcToday();
-            const dataCount = QC_DATA.filter(r => r.category === 'receiving' && String(r.date || '').substring(0, 10) === day).length;
+            const dataCount = rcvBoardGroups().length;
             if (rcvBoardSlots <= dataCount + 1) return showToast('Minimal harus ada satu baris kosong.', 'error');
             rcvBoardSlots -= 1;
             renderRcvBoard();
+        }
+
+        function rcvBoardDeleteGroup(idsStr) {
+            const ids = String(idsStr || '').split(',').filter(Boolean);
+            if (!ids.length) return;
+            APP_STATE.deleteTarget = { type: 'qc', ids, fromBoard: true };
+            openModal('deleteModal');
         }
 
         async function exportRcvBoardExcel() {
@@ -10271,8 +10305,12 @@
         }
 
         async function executeDelete() {
-            const { type, id, fromBoard } = APP_STATE.deleteTarget;
-            if (!type || !id) return;
+            const target = APP_STATE.deleteTarget || {};
+            const { type, fromBoard } = target;
+            const ids = Array.isArray(target.ids) && target.ids.length ? target.ids
+                : (target.id ? [target.id] : []);
+            const id = ids[0];
+            if (!type || !ids.length) return;
 
             const peran = (APP_STATE.currentUser || {}).role || '';
             const diizinkan = type === 'user' ? peran === 'superadmin'
@@ -10293,7 +10331,7 @@
                     await deleteFromSheet('Folders', id);
                 } else {
                     const peta = { ticket: 'Tickets', asset: 'Assets', gemba: 'Gemba', 'gemba-qc': 'GembaQc', document: 'Documents', user: 'Users', qc: 'Qc', produk: 'Products', customer: 'Customers', 'wh-tx': 'WhTx' };
-                    await deleteFromSheet(peta[type], id);
+                    for (const tid of ids) await deleteFromSheet(peta[type], tid);
                 }
             } catch (err) {
                 closeModal('deleteModal');
@@ -10308,7 +10346,7 @@
             if (type === 'asset') ASSETS = ASSETS.filter(x => x.id !== id);
             if (type === 'gemba') GEMBA_FINDINGS = GEMBA_FINDINGS.filter(x => x.id !== id);
             if (type === 'gemba-qc') GEMBA_QC_FINDINGS = GEMBA_QC_FINDINGS.filter(x => x.id !== id);
-            if (type === 'qc') QC_DATA = QC_DATA.filter(x => x.id !== id);
+            if (type === 'qc') QC_DATA = QC_DATA.filter(x => !ids.includes(x.id));
             // Hapus dari papan kedatangan: barisnya ikut hilang (slot berkurang satu)
             if (type === 'qc' && fromBoard && rcvBoardSlots > 1) rcvBoardSlots -= 1;
             if (type === 'folder') {
