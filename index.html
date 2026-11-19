@@ -915,7 +915,7 @@
 
         <!-- ===== SUB-MODUL QC (mirror menu QUALITY QMS) ===== -->
         <section id="view-qc-lab" class="p-3 md:p-5 space-y-4 hide">
-            <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
+            <div id="qcLabCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-3">
                         <div class="bg-purple-50 p-2.5 rounded-xl text-purple-600 border border-purple-100"><i class="fas fa-flask-vial"></i></div>
@@ -932,6 +932,7 @@
                         <button onclick="openQcLabModal('ha')" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all flex items-center gap-2">
                             <i class="fas fa-file-lines"></i> Hasil Analisa
                         </button>
+                        <button type="button" id="qcLabFsBtn" onclick="qcLabToggleFullscreen()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="qcLabFsIcon"></i></button>
                     </div>
                 </div>
                 <!-- Tab jenis dokumen (mirror QMS): filter daftar Lab per Release Note / Hasil Analisa -->
@@ -7382,9 +7383,24 @@
             el.requestFullscreen().catch(() => showToast('Layar penuh ditolak browser.', 'error'));
         }
 
+        function qcLabToggleFullscreen() {
+            const el = document.getElementById('qcLabCard');
+            if (!el) return;
+            if (document.fullscreenElement) { document.exitFullscreen(); return; }
+            if (!el.requestFullscreen) return showToast('Browser tidak mendukung layar penuh.', 'error');
+            el.requestFullscreen().catch(() => showToast('Layar penuh ditolak browser.', 'error'));
+        }
+
         document.addEventListener('fullscreenchange', () => {
-            const icon = document.getElementById('rcvBoardFsIcon');
-            if (icon) icon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+            const fs = document.fullscreenElement;
+            const boardIcon = document.getElementById('rcvBoardFsIcon');
+            if (boardIcon) boardIcon.className = (fs && fs.id === 'rcvBoardCard') ? 'fas fa-compress' : 'fas fa-expand';
+            const labIcon = document.getElementById('qcLabFsIcon');
+            if (labIcon) labIcon.className = (fs && fs.id === 'qcLabCard') ? 'fas fa-compress' : 'fas fa-expand';
+            ['rcvBoardCard', 'qcLabCard'].forEach(cid => {
+                const el = document.getElementById(cid);
+                if (el) el.classList.toggle('overflow-auto', el === fs);
+            });
         });
 
         /* Tambah / hapus baris material pada satu kedatangan (supplier bawa 2, 3, 4 jenis material).
