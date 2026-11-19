@@ -962,7 +962,7 @@
         </section>
 
         <section id="view-qc-patrol" class="p-3 md:p-5 space-y-4 hide">
-            <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
+            <div id="qcPatrolCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-3">
                         <div class="bg-teal-50 p-2.5 rounded-xl text-teal-600 border border-teal-100"><i class="fas fa-user-shield"></i></div>
@@ -976,6 +976,7 @@
                         <a href="#/qc-patrol/tambah" onclick="openQcModal('create','patrol'); return false;" class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-600/20 transition-all flex items-center gap-2 cursor-pointer">
                             <i class="fas fa-plus"></i> QC Patrol
                         </a>
+                        <button type="button" id="qcPatrolFsBtn" onclick="toggleCardFullscreen('qcPatrolCard')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="qcPatrolFsIcon"></i></button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -1000,7 +1001,7 @@
         </section>
 
         <section id="view-qc-outgoing" class="p-3 md:p-5 space-y-4 hide">
-            <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
+            <div id="qcOutgoingCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-3">
                         <div class="bg-orange-50 p-2.5 rounded-xl text-orange-600 border border-orange-100"><i class="fas fa-truck-fast"></i></div>
@@ -1014,6 +1015,7 @@
                         <a href="#/qc-outgoing/tambah" onclick="openQcModal('create','outgoing'); return false;" class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer">
                             <i class="fas fa-plus"></i> QC Outgoing
                         </a>
+                        <button type="button" id="qcOutgoingFsBtn" onclick="toggleCardFullscreen('qcOutgoingCard')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="qcOutgoingFsIcon"></i></button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -1038,7 +1040,7 @@
         </section>
 
         <section id="view-qc-receiving" class="p-3 md:p-5 space-y-4 hide">
-            <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
+            <div id="qcReceivingCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-3">
                         <div class="bg-cyan-50 p-2.5 rounded-xl text-cyan-600 border border-cyan-100"><i class="fas fa-dolly"></i></div>
@@ -1055,6 +1057,7 @@
                         <button type="button" onclick="openBapModal('create')" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-600/20 transition-all flex items-center gap-2">
                             <i class="fas fa-file-circle-xmark"></i> BAP Penolakan
                         </button>
+                        <button type="button" id="qcReceivingFsBtn" onclick="toggleCardFullscreen('qcReceivingCard')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="qcReceivingFsIcon"></i></button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -1195,7 +1198,7 @@
         </section>
 
         <section id="view-report-supplier" class="p-3 md:p-5 space-y-4 hide">
-            <div class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
+            <div id="reportSupplierCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-3">
                         <div class="bg-rose-50 p-2.5 rounded-xl text-rose-600 border border-rose-100"><i class="fas fa-chart-line"></i></div>
@@ -1210,6 +1213,7 @@
                         <a href="#/report-supplier/tambah" onclick="openQcSupplierModal('create'); return false;" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-600/20 transition-all flex items-center gap-2 cursor-pointer">
                             <i class="fas fa-plus"></i> Report Supplier
                         </a>
+                        <button type="button" id="reportSupplierFsBtn" onclick="toggleCardFullscreen('reportSupplierCard')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="reportSupplierFsIcon"></i></button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -7375,31 +7379,33 @@
             exportToCSV(`Kedatangan_Material_${day}.csv`, data);
         }
 
-        function rcvBoardToggleFullscreen() {
-            const el = document.getElementById('rcvBoardCard');
+        const FS_CARD_ICONS = {
+            rcvBoardCard: 'rcvBoardFsIcon',
+            qcLabCard: 'qcLabFsIcon',
+            qcReceivingCard: 'qcReceivingFsIcon',
+            qcPatrolCard: 'qcPatrolFsIcon',
+            qcOutgoingCard: 'qcOutgoingFsIcon',
+            reportSupplierCard: 'reportSupplierFsIcon'
+        };
+
+        function toggleCardFullscreen(cardId) {
+            const el = document.getElementById(cardId);
             if (!el) return;
             if (document.fullscreenElement) { document.exitFullscreen(); return; }
             if (!el.requestFullscreen) return showToast('Browser tidak mendukung layar penuh.', 'error');
             el.requestFullscreen().catch(() => showToast('Layar penuh ditolak browser.', 'error'));
         }
 
-        function qcLabToggleFullscreen() {
-            const el = document.getElementById('qcLabCard');
-            if (!el) return;
-            if (document.fullscreenElement) { document.exitFullscreen(); return; }
-            if (!el.requestFullscreen) return showToast('Browser tidak mendukung layar penuh.', 'error');
-            el.requestFullscreen().catch(() => showToast('Layar penuh ditolak browser.', 'error'));
-        }
+        function rcvBoardToggleFullscreen() { toggleCardFullscreen('rcvBoardCard'); }
+        function qcLabToggleFullscreen() { toggleCardFullscreen('qcLabCard'); }
 
         document.addEventListener('fullscreenchange', () => {
             const fs = document.fullscreenElement;
-            const boardIcon = document.getElementById('rcvBoardFsIcon');
-            if (boardIcon) boardIcon.className = (fs && fs.id === 'rcvBoardCard') ? 'fas fa-compress' : 'fas fa-expand';
-            const labIcon = document.getElementById('qcLabFsIcon');
-            if (labIcon) labIcon.className = (fs && fs.id === 'qcLabCard') ? 'fas fa-compress' : 'fas fa-expand';
-            ['rcvBoardCard', 'qcLabCard'].forEach(cid => {
-                const el = document.getElementById(cid);
-                if (el) el.classList.toggle('overflow-auto', el === fs);
+            Object.keys(FS_CARD_ICONS).forEach(cid => {
+                const icon = document.getElementById(FS_CARD_ICONS[cid]);
+                if (icon) icon.className = (fs && fs.id === cid) ? 'fas fa-compress' : 'fas fa-expand';
+                const card = document.getElementById(cid);
+                if (card) card.classList.toggle('overflow-auto', card === fs);
             });
         });
 
