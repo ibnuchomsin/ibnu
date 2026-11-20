@@ -1172,7 +1172,7 @@
                         <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600 border border-amber-100"><i class="fas fa-file-invoice"></i></div>
                         <div>
                             <h2 class="text-sm font-extrabold text-slate-800">Report Material Receipt (GR)</h2>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Rekap Penerimaan Material per Bulan (Tanggal 1 &ndash; 30/31)</p>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Rekap Penerimaan Material per Tanggal (1 &ndash; 30/31)</p>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center justify-center gap-2">
@@ -7474,10 +7474,11 @@
         }
 
         /* ================= REPORT MATERIAL RECEIPT (GR) =================
-           Rekap penerimaan material per bulan (tanggal 1 s.d. 30/31).
-           Sumber: QC_DATA kategori 'receiving' (menu Material Receipt).
-           Satu baris = satu material milik supplier; kolom Total = subtotal
-           qty supplier tersebut dalam bulan terpilih. */
+           Rekap penerimaan material PER TANGGAL dalam satu bulan (tanggal
+           1 s.d. 30/31). Sumber: QC_DATA kategori 'receiving' (Material Receipt).
+           Setiap tanggal punya baris judul sendiri; di bawahnya daftar supplier
+           + material yang datang hari itu. Kolom Total = subtotal qty supplier
+           pada tanggal tersebut, baris judul tanggal memuat total hari itu. */
         const RCV_REPORT_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         function rcvReportMonthValue() {
@@ -7546,19 +7547,34 @@
             sel.value = daftar.indexOf(sekarang) > -1 ? sekarang : '';
         }
 
+        /* Label tanggal gaya Indonesia: "Kamis, 05 November 2026" */
+        function rcvReportDateLabel(ymd) {
+            const cocok = String(ymd || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!cocok) return String(ymd || 'TANPA TANGGAL');
+            const d = new Date(parseInt(cocok[1], 10), parseInt(cocok[2], 10) - 1, parseInt(cocok[3], 10));
+            const hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][d.getDay()] || '';
+            return `${hari}, ${cocok[3]} ${RCV_REPORT_MONTHS[d.getMonth()]} ${cocok[1]}`;
+        }
+
         function rcvReportBuild() {
             const month = rcvReportMonthValue();
             const supFilter = (document.getElementById('rcvReportSupplier') || {}).value || '';
-            const peta = new Map();
+            const petaHari = new Map();
             QC_DATA.forEach(r => {
                 if (r.category !== 'receiving') return;
-                if (month && String(r.date || '').substring(0, 7) !== month) return;
+                const tanggal = String(r.date || '').trim().substring(0, 10);
+                if (month && tanggal.substring(0, 7) !== month) return;
                 const supplier = String(r.ref || '').trim().toUpperCase() || '(TANPA SUPPLIER)';
                 if (supFilter && supplier !== supFilter) return;
                 const meta = qcReceivingMeta(r);
                 const material = String(r.item || '').trim().toUpperCase() || '(TANPA MATERIAL)';
-                if (!peta.has(supplier)) peta.set(supplier, { supplier: supplier, bahan: new Map(), kedatangan: new Set() });
-                const grup = peta.get(supplier);
+                const kunciKedatangan = meta.clockInAt ? `${meta.clockInAt}|${supplier}|${r.inspector || ''}` : `id:${r.id}`;
+                if (!petaHari.has(tanggal)) petaHari.set(tanggal, { date: tanggal, suppliers: new Map(), kedatangan: new Set() });
+                const hari = petaHari.get(tanggal);
+                hari.kedatangan.add(kunciKedatangan);
+                if (!hari.suppliers.has(supplier)) hari.suppliers.set(supplier, { supplier: supplier, bahan: new Map(), kedatangan: new Set() });
+                const grup = hari.suppliers.get(supplier);
+                grup.kedatangan.add(kunciKedatangan);
                 if (!grup.bahan.has(material)) grup.bahan.set(material, { material: material, num: 0, unit: '', raws: [], baris: 0 });
                 const bahan = grup.bahan.get(material);
                 const q = rcvParseQty(meta.qty);
@@ -7566,11 +7582,10 @@
                 if (!bahan.unit && q.unit) bahan.unit = q.unit;
                 if (q.raw) bahan.raws.push(q.raw);
                 bahan.baris += 1;
-                grup.kedatangan.add(meta.clockInAt ? `${meta.clockInAt}|${supplier}|${r.inspector || ''}` : `id:${r.id}`);
             });
 
-            // Total per supplier dijumlah PER SATUAN (PCS/KG/BOX tidak boleh
-            // dijumlahkan jadi satu angka) -> ditampilkan "150 PCS + 1.000 KG".
+            // Total dijumlah PER SATUAN (PCS/KG/BOX tidak boleh dijumlahkan
+            // jadi satu angka) -> ditampilkan "150 PCS + 1.000 KG".
             const jumlahPerUnit = daftar => {
                 const petaUnit = new Map();
                 daftar.forEach(b => {
@@ -7583,23 +7598,45 @@
                     .join(' + ');
             };
 
-            const groups = [...peta.values()].map(g => {
-                const bahan = [...g.bahan.values()].sort((a, b) => a.material.localeCompare(b.material));
+            // Satu kelompok per tanggal (1, 2, 3, ... akhir bulan). Di dalam
+            // tanggal: supplier A-Z, lalu material A-Z per supplier.
+            const days = [...petaHari.values()].map(h => {
+                const suppliers = [...h.suppliers.values()].map(g => {
+                    const bahan = [...g.bahan.values()].sort((a, b) => a.material.localeCompare(b.material));
+                    return {
+                        supplier: g.supplier,
+                        bahan: bahan,
+                        totalText: jumlahPerUnit(bahan),
+                        kedatangan: g.kedatangan.size
+                    };
+                }).sort((a, b) => a.supplier.localeCompare(b.supplier));
+                const semuaBahan = suppliers.reduce((arr, g) => arr.concat(g.bahan), []);
                 return {
-                    supplier: g.supplier,
-                    bahan: bahan,
-                    totalText: jumlahPerUnit(bahan),
-                    kedatangan: g.kedatangan.size
+                    date: h.date,
+                    label: rcvReportDateLabel(h.date),
+                    suppliers: suppliers,
+                    totalText: jumlahPerUnit(semuaBahan),
+                    materialCount: semuaBahan.length,
+                    kedatangan: h.kedatangan.size
                 };
-            }).sort((a, b) => a.supplier.localeCompare(b.supplier));
+            }).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+            const namaSupplier = new Set();
+            const semuaBahan = [];
+            days.forEach(d => d.suppliers.forEach(g => {
+                namaSupplier.add(g.supplier);
+                g.bahan.forEach(b => semuaBahan.push(b));
+            }));
 
             return {
                 month: month,
                 supplier: supFilter,
-                groups: groups,
-                totalText: jumlahPerUnit(groups.reduce((arr, g) => arr.concat(g.bahan), [])),
-                totalMaterial: groups.reduce((t, g) => t + g.bahan.length, 0),
-                totalKedatangan: groups.reduce((t, g) => t + g.kedatangan, 0)
+                days: days,
+                totalText: jumlahPerUnit(semuaBahan),
+                totalMaterial: semuaBahan.length,
+                totalSupplier: namaSupplier.size,
+                totalKedatangan: days.reduce((t, d) => t + d.kedatangan, 0),
+                jumlahHari: days.length
             };
         }
 
@@ -7612,34 +7649,45 @@
             if (info) {
                 info.innerHTML = `
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200"><i class="fas fa-calendar-days text-[10px]"></i> ${rcvReportPeriodText(data.month)}</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-calendar-check text-[10px]"></i> ${data.jumlahHari} tanggal</span>
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-truck-ramp-box text-[10px]"></i> ${data.totalKedatangan} kedatangan</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-industry text-[10px]"></i> ${data.groups.length} supplier</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-industry text-[10px]"></i> ${data.totalSupplier} supplier</span>
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-boxes-stacked text-[10px]"></i> ${data.totalMaterial} material</span>`;
             }
-            if (!data.groups.length) {
+            if (!data.days.length) {
                 body.innerHTML = '<tr><td colspan="5" class="text-center text-xs text-slate-400 font-semibold py-10">Belum ada kedatangan material pada periode ini.</td></tr>';
                 return;
             }
             let no = 0;
             let html = '';
-            data.groups.forEach(g => {
-                no += 1;
-                const rs = g.bahan.length;
-                g.bahan.forEach((b, i) => {
-                    html += '<tr class="hover:bg-amber-50/40">';
-                    if (i === 0) {
-                        html += `<td rowspan="${rs}" class="text-center border border-slate-100 align-middle"><span class="text-xs font-bold">${no}</span></td>
-                                 <td rowspan="${rs}" class="border border-slate-100 px-2 align-middle">
-                                     <div class="font-bold text-[11px] text-slate-800 uppercase leading-tight">${escapeHTML(g.supplier)}</div>
-                                     <div class="text-[9px] font-semibold text-slate-400">${g.kedatangan} kedatangan</div>
-                                 </td>`;
-                    }
-                    html += `<td class="border border-slate-100 px-2 py-1.5 text-xs font-semibold text-slate-700 uppercase">${escapeHTML(b.material)}</td>
-                             <td class="border border-slate-100 px-2 py-1.5 text-center text-xs font-bold text-slate-700 whitespace-nowrap">${rcvQtyLabel(b)}</td>`;
-                    if (i === 0) {
-                        html += `<td rowspan="${rs}" class="border border-slate-100 px-2 text-center align-middle text-sm font-black text-amber-700 whitespace-nowrap">${g.totalText ? escapeHTML(g.totalText) : '<span class="text-slate-300">&mdash;</span>'}</td>`;
-                    }
-                    html += '</tr>';
+            data.days.forEach(d => {
+                // Baris judul tanggal: tanggal + jumlah kedatangan + total qty hari itu
+                html += `<tr class="bg-amber-50/80">
+                            <td colspan="4" class="border border-amber-200/70 px-2 py-1.5">
+                                <span class="text-[11px] font-black uppercase tracking-wide text-amber-900">${escapeHTML(d.label)}</span>
+                                <span class="text-[10px] font-semibold text-slate-500">&middot; ${d.kedatangan} kedatangan &middot; ${d.materialCount} material</span>
+                            </td>
+                            <td class="border border-amber-200/70 px-2 py-1.5 text-center text-xs font-black text-amber-700 whitespace-nowrap">${d.totalText ? escapeHTML(d.totalText) : '&mdash;'}</td>
+                         </tr>`;
+                d.suppliers.forEach(g => {
+                    no += 1;
+                    const rs = g.bahan.length;
+                    g.bahan.forEach((b, i) => {
+                        html += '<tr class="hover:bg-amber-50/40">';
+                        if (i === 0) {
+                            html += `<td rowspan="${rs}" class="text-center border border-slate-100 align-middle"><span class="text-xs font-bold">${no}</span></td>
+                                     <td rowspan="${rs}" class="border border-slate-100 px-2 align-middle">
+                                         <div class="font-bold text-[11px] text-slate-800 uppercase leading-tight">${escapeHTML(g.supplier)}</div>
+                                         <div class="text-[9px] font-semibold text-slate-400">${g.kedatangan} kedatangan</div>
+                                     </td>`;
+                        }
+                        html += `<td class="border border-slate-100 px-2 py-1.5 text-xs font-semibold text-slate-700 uppercase">${escapeHTML(b.material)}</td>
+                                 <td class="border border-slate-100 px-2 py-1.5 text-center text-xs font-bold text-slate-700 whitespace-nowrap">${rcvQtyLabel(b)}</td>`;
+                        if (i === 0) {
+                            html += `<td rowspan="${rs}" class="border border-slate-100 px-2 text-center align-middle text-sm font-black text-amber-700 whitespace-nowrap">${g.totalText ? escapeHTML(g.totalText) : '<span class="text-slate-300">&mdash;</span>'}</td>`;
+                        }
+                        html += '</tr>';
+                    });
                 });
             });
             html += `<tr class="bg-amber-50">
@@ -7674,7 +7722,7 @@
         async function exportRcvReportExcel() {
             if (typeof ExcelJS === 'undefined') return showToast('Module Excel belum dimuat', 'error');
             const data = rcvReportBuild();
-            if (!data.groups.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
+            if (!data.days.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
             showToast('Menyiapkan Excel report material receipt...', 'info');
             try {
                 const wb = new ExcelJS.Workbook();
@@ -7684,7 +7732,7 @@
                     { header: 'Supplier', key: 'supplier', width: 32 },
                     { header: 'Material', key: 'material', width: 38 },
                     { header: 'Qty', key: 'qty', width: 16 },
-                    { header: 'Total', key: 'total', width: 16 }
+                    { header: 'Total', key: 'total', width: 18 }
                 ];
                 const hdr = ws.getRow(1);
                 hdr.font = { bold: true, color: { argb: 'FFFFFFFF' } };
@@ -7692,15 +7740,26 @@
                 hdr.height = 22;
                 hdr.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD97706' } }; });
                 let no = 0;
-                data.groups.forEach(g => {
-                    no += 1;
-                    g.bahan.forEach((b, i) => {
-                        ws.addRow({
-                            no: i === 0 ? no : '',
-                            supplier: i === 0 ? g.supplier : '',
-                            material: b.material,
-                            qty: rcvQtyPlain(b),
-                            total: i === 0 ? g.totalText : ''
+                data.days.forEach(d => {
+                    const band = ws.addRow({
+                        no: '',
+                        supplier: d.label.toUpperCase(),
+                        material: `${d.kedatangan} kedatangan \u00b7 ${d.materialCount} material`,
+                        qty: '',
+                        total: d.totalText
+                    });
+                    band.font = { bold: true, color: { argb: 'FF92400E' } };
+                    band.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }; });
+                    d.suppliers.forEach(g => {
+                        no += 1;
+                        g.bahan.forEach((b, i) => {
+                            ws.addRow({
+                                no: i === 0 ? no : '',
+                                supplier: i === 0 ? g.supplier : '',
+                                material: b.material,
+                                qty: rcvQtyPlain(b),
+                                total: i === 0 ? g.totalText : ''
+                            });
                         });
                     });
                 });
@@ -7724,18 +7783,21 @@
 
         function exportRcvReportCSV() {
             const data = rcvReportBuild();
-            if (!data.groups.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
+            if (!data.days.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
             const rows = [['No', 'Supplier', 'Material', 'Qty', 'Total']];
             let no = 0;
-            data.groups.forEach(g => {
-                no += 1;
-                g.bahan.forEach((b, i) => rows.push([
-                    i === 0 ? String(no) : '',
-                    escapeCSVField(i === 0 ? g.supplier : ''),
-                    escapeCSVField(b.material),
-                    escapeCSVField(rcvQtyPlain(b)),
-                    escapeCSVField(i === 0 ? g.totalText : '')
-                ]));
+            data.days.forEach(d => {
+                rows.push(['', escapeCSVField(d.label.toUpperCase()), escapeCSVField(`${d.kedatangan} kedatangan \u00b7 ${d.materialCount} material`), '', escapeCSVField(d.totalText)]);
+                d.suppliers.forEach(g => {
+                    no += 1;
+                    g.bahan.forEach((b, i) => rows.push([
+                        i === 0 ? String(no) : '',
+                        escapeCSVField(i === 0 ? g.supplier : ''),
+                        escapeCSVField(b.material),
+                        escapeCSVField(rcvQtyPlain(b)),
+                        escapeCSVField(i === 0 ? g.totalText : '')
+                    ]));
+                });
             });
             rows.push(['', 'TOTAL KESELURUHAN', escapeCSVField(data.totalMaterial + ' material'), '', escapeCSVField(data.totalText)]);
             exportToCSV(`Report_Material_Receipt_${data.month || 'semua'}.csv`, rows);
