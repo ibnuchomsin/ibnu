@@ -1172,18 +1172,40 @@
                         <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600 border border-amber-100"><i class="fas fa-file-invoice"></i></div>
                         <div>
                             <h2 class="text-sm font-extrabold text-slate-800">Report Material Receipt (GR)</h2>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Matriks Penerimaan Material per Tanggal (Kolom 1 &ndash; 30/31)</p>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Matriks Penerimaan Material per Tanggal &ndash; Pilih Rentang Tanggal</p>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center justify-center gap-2">
                         <select id="rcvReportSupplier" onchange="renderRcvReport()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none max-w-[190px]" title="Filter Supplier">
                             <option value="">Semua Supplier</option>
                         </select>
-                        <select id="rcvReportDay" onchange="renderRcvReport()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none max-w-[150px]" title="Filter Tanggal">
-                            <option value="">Semua tanggal</option>
-                        </select>
-                        <select id="rcvReportMonthSel" onchange="rcvReportFilterChanged()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none" title="Filter Bulan"></select>
-                        <select id="rcvReportYear" onchange="rcvReportFilterChanged()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none" title="Filter Tahun"></select>
+                        <div id="rcvReportPeriodWrap" class="relative">
+                            <button type="button" id="rcvReportPeriodBtn" onclick="rcvReportPeriodToggle(event)" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-white focus:border-amber-500 outline-none flex items-center gap-2" title="Pilih rentang tanggal (dd-mm-yyyy)">
+                                <i class="fas fa-calendar-days text-slate-400 text-[11px]"></i>
+                                <span id="rcvReportPeriodLabel">Pilih tanggal</span>
+                                <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                            </button>
+                            <div id="rcvReportPeriodPanel" class="hide absolute right-0 mt-1 w-[286px] bg-white border border-slate-200 rounded-xl shadow-xl z-30 p-3 space-y-2.5">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Dari</label>
+                                        <input type="date" id="rcvReportFrom" onchange="rcvReportPeriodApply()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-amber-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Sampai</label>
+                                        <input type="date" id="rcvReportTo" onchange="rcvReportPeriodApply()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-amber-500">
+                                    </div>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    <button type="button" onclick="rcvReportPeriodPreset('today')" class="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold hover:bg-amber-100">Hari ini</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('month')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Bulan ini</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('last')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Bulan lalu</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('7')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">7 hari</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('all')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Semua</button>
+                                </div>
+                                <button type="button" onclick="rcvReportPeriodClose()" class="w-full py-1.5 rounded-lg bg-slate-800 text-white text-[11px] font-bold hover:bg-slate-900 transition-colors">Tutup</button>
+                            </div>
+                        </div>
                         <div id="rcvReportExportWrap" class="relative">
                             <button type="button" id="rcvReportExportBtn" onclick="rcvReportExportToggle(event)" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export report material receipt"><i class="fas fa-file-export"></i> Export <i class="fas fa-chevron-down text-[9px]"></i></button>
                             <div id="rcvReportExportMenu" class="hide absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden">
@@ -7474,67 +7496,120 @@
            'receiving' (menu Material Receipt).
            Kolom tanggal mengikuti "update harian": untuk bulan berjalan hanya
            sampai tanggal hari ini (tgl 21-30 belum tampil sebelum waktunya). */
-        const RCV_REPORT_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        /* Filter rentang tanggal: satu tombol -> panel Dari / Sampai (dd-mm-yyyy). */
+        const RCV_REPORT_MAX_HARI = 92;
 
-        /* Filter: Tanggal (opsional) + Bulan + Tahun. Default = bulan berjalan. */
-        function rcvReportMonthValue() {
-            const selB = document.getElementById('rcvReportMonthSel');
-            const selY = document.getElementById('rcvReportYear');
-            if (!selB || !selY) return '';
-            if (!selB.value) selB.value = String(parseInt(qcToday().substring(5, 7), 10) || 1);
-            if (!selY.value) selY.value = qcToday().substring(0, 4);
-            return `${selY.value}-${String(selB.value).padStart(2, '0')}`;
+        function rcvFmtTanggal(iso) {
+            const cocok = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            return cocok ? `${cocok[3]}-${cocok[2]}-${cocok[1]}` : String(iso || '-');
         }
 
-        /* Batas kolom tanggal: bulan berjalan -> hanya s.d. hari ini;
-           bulan lampau -> sampai akhir bulan; bulan depan -> belum ada. */
-        function rcvReportDayLimit(month) {
-            const dayCount = rcvReportDayCount(month);
+        function rcvReportPeriodLabel() {
+            const dari = document.getElementById('rcvReportFrom');
+            const sampai = document.getElementById('rcvReportTo');
+            const label = document.getElementById('rcvReportPeriodLabel');
+            if (!dari || !sampai || !label) return;
+            if (!dari.value || !sampai.value) { label.textContent = 'Pilih tanggal'; return; }
+            label.textContent = dari.value === sampai.value
+                ? rcvFmtTanggal(dari.value)
+                : `${rcvFmtTanggal(dari.value)} s.d. ${rcvFmtTanggal(sampai.value)}`;
+        }
+
+        /* Nilai awal: tanggal 1 bulan berjalan s.d. hari ini. */
+        function rcvReportPeriodInit() {
+            const dari = document.getElementById('rcvReportFrom');
+            const sampai = document.getElementById('rcvReportTo');
+            if (!dari || !sampai || dari.dataset.siap === '1') return;
             const hariIni = qcToday();
-            const bulanIni = String(month).substring(0, 7);
-            if (bulanIni === hariIni.substring(0, 7)) {
-                return Math.min(parseInt(hariIni.substring(8, 10), 10) || dayCount, dayCount);
+            dari.max = hariIni;
+            sampai.max = hariIni;
+            dari.value = hariIni.substring(0, 8) + '01';
+            sampai.value = hariIni;
+            dari.dataset.siap = '1';
+            rcvReportPeriodLabel();
+        }
+
+        function rcvReportPeriodToggle(ev) {
+            if (ev) ev.stopPropagation();
+            const panel = document.getElementById('rcvReportPeriodPanel');
+            if (panel) panel.classList.toggle('hide');
+        }
+
+        function rcvReportPeriodClose() {
+            const panel = document.getElementById('rcvReportPeriodPanel');
+            if (panel) panel.classList.add('hide');
+        }
+
+        function rcvReportPeriodPreset(kind) {
+            const dari = document.getElementById('rcvReportFrom');
+            const sampai = document.getElementById('rcvReportTo');
+            if (!dari || !sampai) return;
+            const hariIni = qcToday();
+            const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const kini = new Date(hariIni + 'T00:00:00');
+            if (kind === 'today') {
+                dari.value = hariIni;
+                sampai.value = hariIni;
+            } else if (kind === 'month') {
+                dari.value = hariIni.substring(0, 8) + '01';
+                sampai.value = hariIni;
+            } else if (kind === 'last') {
+                dari.value = iso(new Date(kini.getFullYear(), kini.getMonth() - 1, 1));
+                sampai.value = iso(new Date(kini.getFullYear(), kini.getMonth(), 0));
+            } else if (kind === '7') {
+                const mundur = new Date(kini.getTime());
+                mundur.setDate(mundur.getDate() - 6);
+                dari.value = iso(mundur);
+                sampai.value = hariIni;
+            } else if (kind === 'all') {
+                const daftar = QC_DATA
+                    .filter(r => r.category === 'receiving')
+                    .map(r => String(r.date || '').trim().substring(0, 10))
+                    .filter(t => /^\d{4}-\d{2}-\d{2}$/.test(t))
+                    .sort();
+                dari.value = daftar.length ? daftar[0] : hariIni;
+                sampai.value = hariIni;
             }
-            return bulanIni > hariIni.substring(0, 7) ? 0 : dayCount;
+            rcvReportPeriodApply(true);
         }
 
-        function rcvReportInitFilters() {
-            const selB = document.getElementById('rcvReportMonthSel');
-            const selY = document.getElementById('rcvReportYear');
-            if (!selB || !selY || selB.dataset.siap === '1') return;
-            const hariIni = qcToday();
-            const tahunIni = parseInt(hariIni.substring(0, 4), 10) || new Date().getFullYear();
-            const tahunData = new Set(QC_DATA
-                .filter(r => r.category === 'receiving')
-                .map(r => parseInt(String(r.date || '').substring(0, 4), 10))
-                .filter(y => y > 2000 && y < 2200));
-            const daftarTahun = [...new Set([tahunIni + 1, tahunIni, tahunIni - 1, tahunIni - 2, ...tahunData])]
-                .filter(y => y <= tahunIni)
-                .sort((a, b) => b - a);
-            selY.innerHTML = daftarTahun.map(y => `<option value="${y}">${y}</option>`).join('');
-            selB.innerHTML = RCV_REPORT_MONTHS.map((n, i) => `<option value="${i + 1}">${n}</option>`).join('');
-            selB.value = String(parseInt(hariIni.substring(5, 7), 10) || 1);
-            selY.value = String(tahunIni);
-            selB.dataset.siap = '1';
-            rcvReportRebuildDayOptions();
-        }
-
-        /* Daftar tanggal menyesuaikan bulan/tahun terpilih + update harian. */
-        function rcvReportRebuildDayOptions() {
-            const sel = document.getElementById('rcvReportDay');
-            if (!sel) return;
-            const month = rcvReportMonthValue();
-            const batas = rcvReportDayLimit(month);
-            const lama = parseInt(sel.value, 10) || 0;
-            sel.dataset.batas = String(batas);
-            sel.innerHTML = '<option value="">Semua tanggal</option>' +
-                Array.from({ length: batas }, (_, i) => `<option value="${i + 1}">Tanggal ${i + 1}</option>`).join('');
-            sel.value = (lama >= 1 && lama <= batas) ? String(lama) : '';
-        }
-
-        function rcvReportFilterChanged() {
-            rcvReportRebuildDayOptions();
+        function rcvReportPeriodApply(tutup) {
+            const dari = document.getElementById('rcvReportFrom');
+            const sampai = document.getElementById('rcvReportTo');
+            if (dari && sampai) {
+                const hariIni = qcToday();
+                if (!dari.value) dari.value = hariIni.substring(0, 8) + '01';
+                if (!sampai.value) sampai.value = hariIni;
+                if (dari.value > sampai.value) {
+                    const tukar = dari.value;
+                    dari.value = sampai.value;
+                    sampai.value = tukar;
+                }
+                if (sampai.value > hariIni) sampai.value = hariIni;
+                if (dari.value > sampai.value) dari.value = sampai.value;
+                rcvReportPeriodLabel();
+            }
             renderRcvReport();
+            if (tutup) rcvReportPeriodClose();
+        }
+
+        /* Daftar kolom tanggal dari rentang terpilih (maks. 92 hari). */
+        function rcvReportRangeDays() {
+            const dari = document.getElementById('rcvReportFrom');
+            const sampai = document.getElementById('rcvReportTo');
+            const hariIni = qcToday();
+            let awal = (dari && dari.value) || (hariIni.substring(0, 8) + '01');
+            let akhir = (sampai && sampai.value) || hariIni;
+            if (awal > akhir) { const tukar = awal; awal = akhir; akhir = tukar; }
+            if (akhir > hariIni) akhir = hariIni;
+            const daftar = [];
+            const jalan = new Date(awal + 'T00:00:00');
+            const batas = new Date(akhir + 'T00:00:00');
+            while (jalan <= batas && daftar.length < RCV_REPORT_MAX_HARI) {
+                daftar.push(`${jalan.getFullYear()}-${String(jalan.getMonth() + 1).padStart(2, '0')}-${String(jalan.getDate()).padStart(2, '0')}`);
+                jalan.setDate(jalan.getDate() + 1);
+            }
+            return daftar;
         }
 
         /* Qty disimpan sebagai teks bebas ("100 PCS", "1.000 KG", "2 BOX").
@@ -7587,42 +7662,23 @@
             sel.value = daftar.indexOf(sekarang) > -1 ? sekarang : '';
         }
 
-        /* Jumlah hari dalam bulan terpilih (30/31/28/29). */
-        function rcvReportDayCount(month) {
-            const bagian = String(month || '').split('-');
-            const y = parseInt(bagian[0], 10) || new Date().getFullYear();
-            const m = parseInt(bagian[1], 10) || (new Date().getMonth() + 1);
-            return new Date(y, m, 0).getDate();
-        }
-
-        function rcvReportTitleMonth(month) {
-            const bagian = String(month || '').split('-');
-            const y = parseInt(bagian[0], 10) || 0;
-            const m = parseInt(bagian[1], 10) || 0;
-            return `${RCV_REPORT_MONTHS[m - 1] || m} ${y}`;
-        }
-
-        /* Matriks: baris = No/Supplier/Material, kolom = tanggal yang tampil. */
+        /* Matriks: baris = No/Supplier/Material, kolom = tanggal dalam rentang. */
         function rcvReportBuild() {
-            const month = rcvReportMonthValue();
             const supFilter = (document.getElementById('rcvReportSupplier') || {}).value || '';
-            const dayCount = rcvReportDayCount(month);
-            const batas = rcvReportDayLimit(month);
-            const pilihHari = parseInt((document.getElementById('rcvReportDay') || {}).value, 10) || 0;
-            const kolomHari = pilihHari
-                ? [pilihHari]
-                : Array.from({ length: batas }, (_, i) => i + 1);
-            const posisi = new Map(kolomHari.map((h, i) => [h, i]));
+            const kolom = rcvReportRangeDays();            // ['2026-11-01', ...]
+            const posisi = new Map(kolom.map((iso, i) => [iso, i]));
+            const satuBulan = new Set(kolom.map(iso => iso.substring(0, 7))).size <= 1;
+            const labelHari = iso => satuBulan
+                ? String(parseInt(iso.substring(8, 10), 10))
+                : `${iso.substring(8, 10)}/${iso.substring(5, 7)}`;
             const peta = new Map();
-            const kedatanganHari = Array.from({ length: kolomHari.length }, () => new Set());
+            const kedatanganHari = Array.from({ length: kolom.length }, () => new Set());
 
             QC_DATA.forEach(r => {
                 if (r.category !== 'receiving') return;
                 const tanggal = String(r.date || '').trim().substring(0, 10);
-                if (month && tanggal.substring(0, 7) !== month) return;
-                const hari = parseInt(tanggal.substring(8, 10), 10);
-                if (!posisi.has(hari)) return;
-                const idx = posisi.get(hari);
+                if (!posisi.has(tanggal)) return;
+                const idx = posisi.get(tanggal);
                 const supplier = String(r.ref || '').trim().toUpperCase() || '(TANPA SUPPLIER)';
                 if (supFilter && supplier !== supFilter) return;
                 const meta = qcReceivingMeta(r);
@@ -7632,7 +7688,7 @@
 
                 if (!peta.has(supplier)) peta.set(supplier, { supplier: supplier, materials: new Map() });
                 const grup = peta.get(supplier);
-                if (!grup.materials.has(material)) grup.materials.set(material, { material: material, perHari: new Array(kolomHari.length).fill(null) });
+                if (!grup.materials.has(material)) grup.materials.set(material, { material: material, perHari: new Array(kolom.length).fill(null) });
                 const baris = grup.materials.get(material);
                 const sel = baris.perHari[idx] || { num: 0, unit: '', raws: [] };
                 const q = rcvParseQty(meta.qty);
@@ -7672,15 +7728,16 @@
             const semuaSel = semuaBaris.reduce((arr, r) => arr.concat(r.perHari.filter(Boolean)), []);
 
             return {
-                month: month,
+                dari: kolom.length ? kolom[0] : '',
+                sampai: kolom.length ? kolom[kolom.length - 1] : '',
                 supplier: supFilter,
-                dayCount: dayCount,
-                kolomHari: kolomHari,
-                pilihHari: pilihHari,
-                title: 'Report Summary Bulan ' + rcvReportTitleMonth(month)
-                    + (pilihHari
-                        ? ` (Tanggal ${pilihHari})`
-                        : (batas > 0 && batas < dayCount ? ` (s.d. tanggal ${batas})` : '')),
+                kolom: kolom,
+                kolomLabel: kolom.map(labelHari),
+                title: kolom.length === 0
+                    ? 'Report Summary (belum ada tanggal)'
+                    : (kolom.length === 1
+                        ? `Report Summary Tanggal ${rcvFmtTanggal(kolom[0])}`
+                        : `Report Summary ${rcvFmtTanggal(kolom[0])} s.d. ${rcvFmtTanggal(kolom[kolom.length - 1])}`),
                 groups: groups,
                 perHari: kedatanganHari.map(s => s.size),
                 totalText: jumlahPerUnit(semuaSel),
@@ -7702,7 +7759,7 @@
             const head = document.getElementById('rcvReportHead');
             const body = document.getElementById('rcvReportBody');
             if (!head || !body) return;
-            rcvReportInitFilters();
+            rcvReportPeriodInit();
             rcvReportFillSuppliers();
             const data = rcvReportBuild();
 
@@ -7716,18 +7773,18 @@
             const thKepala = 'border border-slate-300 px-2 py-2 text-[11px] font-black uppercase tracking-wide text-slate-800';
 
             head.innerHTML = `<tr>
-                    <th colspan="${data.kolomHari.length + 4}" class="border border-slate-300 bg-white px-2 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-800">${escapeHTML(data.title)}</th>
+                    <th colspan="${data.kolomLabel.length + 4}" class="border border-slate-300 bg-white px-2 py-2 text-left text-xs font-black uppercase tracking-wide text-slate-800">${escapeHTML(data.title)}</th>
                 </tr>
                 <tr>
                     <th class="${thKepala} text-center" style="${kiriNo}${latarKepala}">No</th>
                     <th class="${thKepala} text-center" style="${kiriSup}${latarKepala}">Supplier</th>
                     <th class="${thKepala} text-left" style="${kiriMat}${latarKepala}">Material</th>
-                    ${data.kolomHari.map(h => `<th class="border border-slate-300 px-0.5 py-2 text-center text-[11px] font-black text-slate-800" style="min-width:40px;width:40px;${latarKepala}">${h}</th>`).join('')}
+                    ${data.kolomLabel.map(h => `<th class="border border-slate-300 px-0.5 py-2 text-center text-[11px] font-black text-slate-800" style="min-width:40px;width:40px;${latarKepala}">${h}</th>`).join('')}
                     <th class="border border-slate-300 px-2 py-2 text-center text-[11px] font-black uppercase text-slate-800" style="min-width:84px;width:84px;${latarKepala}">Total</th>
                 </tr>`;
 
             if (!data.groups.length) {
-                body.innerHTML = `<tr><td colspan="${data.kolomHari.length + 4}" class="text-center text-xs text-slate-400 font-semibold py-10">Belum ada kedatangan material pada periode ini.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="${data.kolomLabel.length + 4}" class="text-center text-xs text-slate-400 font-semibold py-10">Belum ada kedatangan material pada periode ini.</td></tr>`;
                 return;
             }
 
@@ -7770,10 +7827,15 @@
 
         document.addEventListener('click', ev => {
             const menu = document.getElementById('rcvReportExportMenu');
-            if (!menu || menu.classList.contains('hide')) return;
-            const wrap = document.getElementById('rcvReportExportWrap');
-            if (wrap && wrap.contains(ev.target)) return;
-            menu.classList.add('hide');
+            if (menu && !menu.classList.contains('hide')) {
+                const wrap = document.getElementById('rcvReportExportWrap');
+                if (!wrap || !wrap.contains(ev.target)) menu.classList.add('hide');
+            }
+            const panel = document.getElementById('rcvReportPeriodPanel');
+            if (panel && !panel.classList.contains('hide')) {
+                const wrap = document.getElementById('rcvReportPeriodWrap');
+                if (!wrap || !wrap.contains(ev.target)) panel.classList.add('hide');
+            }
         });
 
         async function exportRcvReportExcel() {
@@ -7783,16 +7845,16 @@
             showToast('Menyiapkan Excel report material receipt...', 'info');
             try {
                 const wb = new ExcelJS.Workbook();
-                const ws = wb.addWorksheet(String('Report GR ' + (data.month || 'Semua')).substring(0, 31));
-                const jumlahKolom = data.kolomHari.length + 4;
+                const ws = wb.addWorksheet(String(`GR ${data.dari ? rcvFmtTanggal(data.dari) : 'semua'}${data.sampai && data.sampai !== data.dari ? ' s.d. ' + rcvFmtTanggal(data.sampai) : ''}`).substring(0, 31));
+                const jumlahKolom = data.kolomLabel.length + 4;
                 const tepi = { style: 'thin', color: { argb: 'FF94A3B8' } };
                 const garis = { top: tepi, left: tepi, bottom: tepi, right: tepi };
-                const kolomTanggal = col => col >= 4 && col <= data.kolomHari.length + 3;
-                const kolomTotal = data.kolomHari.length + 4;
+                const kolomTanggal = col => col >= 4 && col <= data.kolomLabel.length + 3;
+                const kolomTotal = data.kolomLabel.length + 4;
 
                 ws.columns = [
                     { width: 6 }, { width: 22 }, { width: 30 },
-                    ...data.kolomHari.map(() => ({ width: 7 })),
+                    ...data.kolomLabel.map(() => ({ width: 7 })),
                     { width: 16 }
                 ];
 
@@ -7804,7 +7866,7 @@
                 judul.getCell(1).alignment = { horizontal: 'left', vertical: 'middle' };
 
                 // Baris kepala: NO | SUPPLIER | MATERIAL | 1..30/31 | TOTAL
-                const kepala = ws.addRow(['NO', 'SUPPLIER', 'MATERIAL', ...data.kolomHari, 'TOTAL']);
+                const kepala = ws.addRow(['NO', 'SUPPLIER', 'MATERIAL', ...data.kolomLabel, 'TOTAL']);
                 kepala.height = 18;
                 kepala.eachCell(cell => {
                     cell.font = { bold: true };
@@ -7861,7 +7923,7 @@
 
                 ws.views = [{ state: 'frozen', xSplit: 3, ySplit: 2 }];
                 const buffer = await wb.xlsx.writeBuffer();
-                saveAs(new Blob([buffer]), `Report_Material_Receipt_${data.month || 'semua'}${data.pilihHari ? '_tgl' + data.pilihHari : ''}.xlsx`);
+                saveAs(new Blob([buffer]), `Report_Material_Receipt_${data.dari || 'semua'}${data.sampai && data.sampai !== data.dari ? '_sd_' + data.sampai : ''}.xlsx`);
                 showToast('Excel report material receipt berhasil diunduh (' + data.totalMaterial + ' material)', 'success');
             } catch (err) {
                 console.error('Export Excel Report GR gagal:', err);
@@ -7874,7 +7936,7 @@
             if (!data.groups.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
             const rows = [
                 [escapeCSVField(data.title)],
-                ['NO', 'SUPPLIER', 'MATERIAL', ...data.kolomHari.map(String), 'TOTAL']
+                ['NO', 'SUPPLIER', 'MATERIAL', ...data.kolomLabel.map(String), 'TOTAL']
             ];
             data.groups.forEach(g => {
                 g.rows.forEach((row, i) => {
@@ -7893,7 +7955,7 @@
                 });
             });
             rows.push(['', '', 'JUMLAH KEDATANGAN', ...data.perHari.map(n => String(n)), escapeCSVField(data.totalText || '')]);
-            exportToCSV(`Report_Material_Receipt_${data.month || 'semua'}${data.pilihHari ? '_tgl' + data.pilihHari : ''}.csv`, rows);
+            exportToCSV(`Report_Material_Receipt_${data.dari || 'semua'}${data.sampai && data.sampai !== data.dari ? '_sd_' + data.sampai : ''}.csv`, rows);
         }
 
         const FS_CARD_ICONS = {
