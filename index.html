@@ -1190,7 +1190,6 @@
                         <button type="button" id="rcvReportFsBtn" onclick="toggleCardFullscreen('rcvReportCard')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="rcvReportFsIcon"></i></button>
                     </div>
                 </div>
-                <div id="rcvReportSummary" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-bold text-slate-500"></div>
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-[11px]">
                         <thead id="rcvReportHead"></thead>
@@ -7644,16 +7643,6 @@
             if (!head || !body) return;
             rcvReportFillSuppliers();
             const data = rcvReportBuild();
-
-            const info = document.getElementById('rcvReportSummary');
-            if (info) {
-                info.innerHTML = `
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200"><i class="fas fa-calendar-days text-[10px]"></i> ${rcvReportPeriodText(data.month)}</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-calendar-check text-[10px]"></i> ${data.jumlahHari} tanggal ada kedatangan</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-truck-ramp-box text-[10px]"></i> ${data.totalKedatangan} kedatangan</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-industry text-[10px]"></i> ${data.totalSupplier} supplier</span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-boxes-stacked text-[10px]"></i> ${data.totalMaterial} material</span>`;
-            }
 
             // Kolom No/Supplier/Material di kiri dibuat menempel (sticky) saat
             // tabel digeser ke kanan untuk melihat tanggal 20-31.
