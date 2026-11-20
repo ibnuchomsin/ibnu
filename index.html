@@ -316,6 +316,10 @@
                             <i class="fas fa-clipboard-list text-xs w-4 text-center"></i>
                             <span>Material Receipt</span>
                         </a>
+                        <a href="?tab=qc-gr-report" onclick="navigateTab(event, 'qc-gr-report')" id="nav-qc-gr-report" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-file-invoice text-xs w-4 text-center"></i>
+                            <span>Report Material Receipt</span>
+                        </a>
                         <a href="?tab=qc-scan" onclick="navigateTab(event, 'qc-scan')" id="nav-qc-scan" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                             <i class="fas fa-qrcode text-xs w-4 text-center"></i>
                             <span>Scan Barcode & QR</span>
@@ -1156,6 +1160,49 @@
                             </tr>
                         </thead>
                         <tbody id="rcvBoardBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-qc-gr-report" class="p-3 md:p-5 space-y-4 hide">
+            <div id="rcvReportCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600 border border-amber-100"><i class="fas fa-file-invoice"></i></div>
+                        <div>
+                            <h2 class="text-sm font-extrabold text-slate-800">Report Material Receipt (GR)</h2>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Rekap Penerimaan Material per Bulan (Tanggal 1 &ndash; 30/31)</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center justify-center gap-2">
+                        <select id="rcvReportSupplier" onchange="renderRcvReport()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none max-w-[190px]" title="Filter Supplier">
+                            <option value="">Semua Supplier</option>
+                        </select>
+                        <input type="month" id="rcvReportMonth" onchange="renderRcvReport()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none" title="Filter Bulan">
+                        <div id="rcvReportExportWrap" class="relative">
+                            <button type="button" id="rcvReportExportBtn" onclick="rcvReportExportToggle(event)" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export report material receipt"><i class="fas fa-file-export"></i> Export <i class="fas fa-chevron-down text-[9px]"></i></button>
+                            <div id="rcvReportExportMenu" class="hide absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden">
+                                <button type="button" onclick="rcvReportExportPick('xlsx')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-excel"></i> XLSX (.xlsx)</button>
+                                <button type="button" onclick="rcvReportExportPick('csv')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-csv"></i> CSV (.csv)</button>
+                            </div>
+                        </div>
+                        <button type="button" id="rcvReportFsBtn" onclick="toggleCardFullscreen('rcvReportCard')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="rcvReportFsIcon"></i></button>
+                    </div>
+                </div>
+                <div id="rcvReportSummary" class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-bold text-slate-500"></div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-amber-100">
+                            <tr>
+                                <th class="w-12 text-center border border-amber-200 text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">No</th>
+                                <th class="lg:w-[26%] border border-amber-200 text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Supplier</th>
+                                <th class="border border-amber-200 text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Material</th>
+                                <th class="text-center w-28 border border-amber-200 text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Qty</th>
+                                <th class="text-center w-28 border border-amber-200 text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rcvReportBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -2942,6 +2989,7 @@
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcOutgoing" value="qc-outgoing" class="w-3.5 h-3.5 rounded text-sky-600 focus:ring-sky-500"><span>QC Outgoing</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcReceiving" value="qc-receiving" class="w-3.5 h-3.5 rounded text-amber-600 focus:ring-amber-500"><span>QC Receiving</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcRcvBoard" value="qc-rcv-board" class="w-3.5 h-3.5 rounded text-orange-600 focus:ring-orange-500"><span>Material Receipt</span></label>
+                            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcGrReport" value="qc-gr-report" class="w-3.5 h-3.5 rounded text-yellow-600 focus:ring-yellow-500"><span>Report Material Receipt</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permQcScan" value="qc-scan" class="w-3.5 h-3.5 rounded text-blue-600 focus:ring-blue-500"><span>Scan Barcode &amp; QR</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permRsSupplier" value="report-supplier" class="w-3.5 h-3.5 rounded text-rose-600 focus:ring-rose-500"><span>Report Supplier</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permEmpProfile" value="emp-profile" class="w-3.5 h-3.5 rounded text-teal-600 focus:ring-teal-500"><span>Employee Profile</span></label>
@@ -4179,7 +4227,7 @@
         /* Kunci link "?tab=<modul>" (menu sidebar): hanya nama tab yang sah */
         function tabDariURL() {
             const t = (new URLSearchParams(location.search).get('tab') || '').trim();
-            const TAB_SAHSIH = ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'documents', 'reports', 'users', 'master-produk', 'master-customer'];
+            const TAB_SAHSIH = ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-gr-report', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'documents', 'reports', 'users', 'master-produk', 'master-customer'];
             if (!TAB_SAHSIH.includes(t) || t === 'dashboard') return null;   // null = pakai default
             return t;
         }
@@ -4330,7 +4378,7 @@
             }
 
             APP_STATE.activeTab = tabId;
-            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'wh-stockreport', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
+            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-gr-report', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'wh-stockreport', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
                 const el = document.getElementById(`view-${t}`);
                 if (el) el.classList.add('hide');
 
@@ -4357,7 +4405,7 @@
                 activeMobileNav.className = "flex flex-col items-center gap-1 text-[10px] font-semibold text-brand-400";
             }
 
-            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', 'wh-stockreport': 'Warehouse — Stock Report', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
+            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-gr-report': 'Report Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', 'wh-stockreport': 'Warehouse — Stock Report', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
             document.getElementById('headerTitle').textContent = titles[tabId] || 'Portal';
 
             // Sub-menu QC: auto-buka + sorot parent saat salah satu tab QC aktif
@@ -4390,6 +4438,7 @@
             if (tabId === 'qc-lab' || tabId === 'qc-patrol' || tabId === 'qc-outgoing' || tabId === 'qc-receiving') renderQcTables();
             if (tabId === 'qc-scan') renderScanHistory();
             if (tabId === 'qc-rcv-board') { rcvBoardSlots = 5; renderRcvBoard(); }
+            if (tabId === 'qc-gr-report') renderRcvReport();
             if (tabId === 'report-supplier') renderReportSupplierTable();
             if (tabId === 'emp-profile') {
                 const sub = (new URLSearchParams(location.search).get('sub') || '').trim();
@@ -5915,7 +5964,7 @@
            ('lab'|'patrol'|'outgoing'|'receiving'|'report_supplier'|'scan'|'emp_*')
            — arsitektur identik qcData QMS. Label/kolom/badge dijiplak dari QMS.
            ===================================================================== */
-        const QC_TABS = ['qc-lab','qc-patrol','qc-outgoing','qc-receiving','qc-rcv-board','qc-scan','report-supplier','emp-profile'];
+        const QC_TABS = ['qc-lab','qc-patrol','qc-outgoing','qc-receiving','qc-rcv-board','qc-gr-report','qc-scan','report-supplier','emp-profile'];
 
         /* Hak akses sub-menu Quality granular:
            - izin 'gemba-qc' = saklar induk modul (Audit Gemba QC selalu ikut)
@@ -6206,6 +6255,7 @@
             { tab: 'qc-outgoing', icon: 'fa-truck-fast', label: 'QC Outgoing', color: 'bg-sky-50 text-sky-600' },
             { tab: 'qc-receiving', icon: 'fa-dolly', label: 'QC Receiving', color: 'bg-amber-50 text-amber-600' },
             { tab: 'qc-rcv-board', icon: 'fa-clipboard-list', label: 'Material Receipt', color: 'bg-cyan-50 text-cyan-600' },
+            { tab: 'qc-gr-report', icon: 'fa-file-invoice', label: 'Report Material Receipt', color: 'bg-amber-50 text-amber-700' },
             { tab: 'qc-scan', icon: 'fa-qrcode', label: 'Scan Barcode & QR', color: 'bg-blue-50 text-blue-600' },
             { tab: 'report-supplier', icon: 'fa-chart-line', label: 'Report Supplier', color: 'bg-rose-50 text-rose-600' },
             { tab: 'emp-profile', icon: 'fa-id-card', label: 'Employee Profile', color: 'bg-teal-50 text-teal-600' }
@@ -7155,6 +7205,7 @@
             });
             renderRcvBoard();
             renderBapReceivingTable();
+            renderRcvReport();
         }
 
         /* ---------- Papan Informasi Material Receiving (dashboard kedatangan) ---------- */
@@ -7422,8 +7473,277 @@
             exportToCSV(`Kedatangan_Material_${day}.csv`, data);
         }
 
+        /* ================= REPORT MATERIAL RECEIPT (GR) =================
+           Rekap penerimaan material per bulan (tanggal 1 s.d. 30/31).
+           Sumber: QC_DATA kategori 'receiving' (menu Material Receipt).
+           Satu baris = satu material milik supplier; kolom Total = subtotal
+           qty supplier tersebut dalam bulan terpilih. */
+        const RCV_REPORT_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        function rcvReportMonthValue() {
+            const el = document.getElementById('rcvReportMonth');
+            if (!el) return '';
+            if (!el.value) el.value = qcToday().substring(0, 7);
+            return el.value;
+        }
+
+        function rcvReportPeriodText(month) {
+            if (!month) return 'Semua periode';
+            const bagian = String(month).split('-');
+            const y = parseInt(bagian[0], 10) || 0;
+            const m = parseInt(bagian[1], 10) || 0;
+            const akhir = new Date(y, m, 0).getDate();
+            return `1 \u2013 ${akhir} ${RCV_REPORT_MONTHS[m - 1] || m} ${y}`;
+        }
+
+        /* Qty disimpan sebagai teks bebas ("100 PCS", "1.000 KG", "2 BOX").
+           Angka diambil untuk penjumlahan, satuan dipertahankan apa adanya. */
+        function rcvParseQty(str) {
+            const raw = String(str === null || str === undefined ? '' : str).trim().toUpperCase();
+            const cocok = raw.match(/\d[\d.,]*/);
+            if (!cocok) return { num: 0, unit: raw, raw: raw };
+            let angka = cocok[0];
+            const unit = raw.replace(angka, '').replace(/\s+/g, ' ').trim();
+            if (angka.indexOf(',') > -1 && angka.indexOf('.') > -1) {
+                angka = angka.replace(/\./g, '').replace(',', '.');
+            } else if (angka.indexOf(',') > -1) {
+                const bagian = angka.split(',');
+                angka = (bagian.length === 2 && bagian[1].length === 3) ? bagian.join('') : angka.replace(',', '.');
+            } else if (angka.indexOf('.') > -1) {
+                const bagian = angka.split('.');
+                if (bagian.length > 2 || (bagian.length === 2 && bagian[1].length === 3)) angka = bagian.join('');
+            }
+            const num = parseFloat(angka);
+            return { num: isFinite(num) ? num : 0, unit: unit, raw: raw };
+        }
+
+        const rcvFmtQty = n => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(n || 0);
+
+        function rcvQtyPlain(obj) {
+            if (obj && obj.num > 0) return rcvFmtQty(obj.num) + (obj.unit ? ' ' + obj.unit : '');
+            const raws = (obj && obj.raws ? obj.raws : []).filter(Boolean);
+            return raws.length ? raws[0] : '-';
+        }
+
+        function rcvQtyLabel(obj) {
+            const teks = rcvQtyPlain(obj);
+            return teks === '-' ? '<span class="text-slate-300">\u2014</span>' : escapeHTML(teks);
+        }
+
+        function rcvReportFillSuppliers() {
+            const sel = document.getElementById('rcvReportSupplier');
+            if (!sel) return;
+            const daftar = [...new Set(QC_DATA
+                .filter(r => r.category === 'receiving')
+                .map(r => String(r.ref || '').trim().toUpperCase())
+                .filter(Boolean))].sort((a, b) => a.localeCompare(b));
+            const tanda = daftar.join('|');
+            if (sel.dataset.tanda === tanda) return;
+            const sekarang = sel.value;
+            sel.dataset.tanda = tanda;
+            sel.innerHTML = '<option value="">Semua Supplier</option>' +
+                daftar.map(s => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
+            sel.value = daftar.indexOf(sekarang) > -1 ? sekarang : '';
+        }
+
+        function rcvReportBuild() {
+            const month = rcvReportMonthValue();
+            const supFilter = (document.getElementById('rcvReportSupplier') || {}).value || '';
+            const peta = new Map();
+            QC_DATA.forEach(r => {
+                if (r.category !== 'receiving') return;
+                if (month && String(r.date || '').substring(0, 7) !== month) return;
+                const supplier = String(r.ref || '').trim().toUpperCase() || '(TANPA SUPPLIER)';
+                if (supFilter && supplier !== supFilter) return;
+                const meta = qcReceivingMeta(r);
+                const material = String(r.item || '').trim().toUpperCase() || '(TANPA MATERIAL)';
+                if (!peta.has(supplier)) peta.set(supplier, { supplier: supplier, bahan: new Map(), kedatangan: new Set() });
+                const grup = peta.get(supplier);
+                if (!grup.bahan.has(material)) grup.bahan.set(material, { material: material, num: 0, unit: '', raws: [], baris: 0 });
+                const bahan = grup.bahan.get(material);
+                const q = rcvParseQty(meta.qty);
+                bahan.num += q.num;
+                if (!bahan.unit && q.unit) bahan.unit = q.unit;
+                if (q.raw) bahan.raws.push(q.raw);
+                bahan.baris += 1;
+                grup.kedatangan.add(meta.clockInAt ? `${meta.clockInAt}|${supplier}|${r.inspector || ''}` : `id:${r.id}`);
+            });
+
+            // Total per supplier dijumlah PER SATUAN (PCS/KG/BOX tidak boleh
+            // dijumlahkan jadi satu angka) -> ditampilkan "150 PCS + 1.000 KG".
+            const jumlahPerUnit = daftar => {
+                const petaUnit = new Map();
+                daftar.forEach(b => {
+                    if (!(b.num > 0)) return;
+                    const u = b.unit || '';
+                    petaUnit.set(u, (petaUnit.get(u) || 0) + b.num);
+                });
+                return [...petaUnit.entries()]
+                    .map(([u, v]) => rcvFmtQty(v) + (u ? ' ' + u : ''))
+                    .join(' + ');
+            };
+
+            const groups = [...peta.values()].map(g => {
+                const bahan = [...g.bahan.values()].sort((a, b) => a.material.localeCompare(b.material));
+                return {
+                    supplier: g.supplier,
+                    bahan: bahan,
+                    totalText: jumlahPerUnit(bahan),
+                    kedatangan: g.kedatangan.size
+                };
+            }).sort((a, b) => a.supplier.localeCompare(b.supplier));
+
+            return {
+                month: month,
+                supplier: supFilter,
+                groups: groups,
+                totalText: jumlahPerUnit(groups.reduce((arr, g) => arr.concat(g.bahan), [])),
+                totalMaterial: groups.reduce((t, g) => t + g.bahan.length, 0),
+                totalKedatangan: groups.reduce((t, g) => t + g.kedatangan, 0)
+            };
+        }
+
+        function renderRcvReport() {
+            const body = document.getElementById('rcvReportBody');
+            if (!body) return;
+            rcvReportFillSuppliers();
+            const data = rcvReportBuild();
+            const info = document.getElementById('rcvReportSummary');
+            if (info) {
+                info.innerHTML = `
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200"><i class="fas fa-calendar-days text-[10px]"></i> ${rcvReportPeriodText(data.month)}</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-truck-ramp-box text-[10px]"></i> ${data.totalKedatangan} kedatangan</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-industry text-[10px]"></i> ${data.groups.length} supplier</span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200"><i class="fas fa-boxes-stacked text-[10px]"></i> ${data.totalMaterial} material</span>`;
+            }
+            if (!data.groups.length) {
+                body.innerHTML = '<tr><td colspan="5" class="text-center text-xs text-slate-400 font-semibold py-10">Belum ada kedatangan material pada periode ini.</td></tr>';
+                return;
+            }
+            let no = 0;
+            let html = '';
+            data.groups.forEach(g => {
+                no += 1;
+                const rs = g.bahan.length;
+                g.bahan.forEach((b, i) => {
+                    html += '<tr class="hover:bg-amber-50/40">';
+                    if (i === 0) {
+                        html += `<td rowspan="${rs}" class="text-center border border-slate-100 align-middle"><span class="text-xs font-bold">${no}</span></td>
+                                 <td rowspan="${rs}" class="border border-slate-100 px-2 align-middle">
+                                     <div class="font-bold text-[11px] text-slate-800 uppercase leading-tight">${escapeHTML(g.supplier)}</div>
+                                     <div class="text-[9px] font-semibold text-slate-400">${g.kedatangan} kedatangan</div>
+                                 </td>`;
+                    }
+                    html += `<td class="border border-slate-100 px-2 py-1.5 text-xs font-semibold text-slate-700 uppercase">${escapeHTML(b.material)}</td>
+                             <td class="border border-slate-100 px-2 py-1.5 text-center text-xs font-bold text-slate-700 whitespace-nowrap">${rcvQtyLabel(b)}</td>`;
+                    if (i === 0) {
+                        html += `<td rowspan="${rs}" class="border border-slate-100 px-2 text-center align-middle text-sm font-black text-amber-700 whitespace-nowrap">${g.totalText ? escapeHTML(g.totalText) : '<span class="text-slate-300">&mdash;</span>'}</td>`;
+                    }
+                    html += '</tr>';
+                });
+            });
+            html += `<tr class="bg-amber-50">
+                        <td colspan="2" class="border border-slate-100 px-2 py-2 text-right text-[11px] font-black uppercase tracking-wide text-amber-900">Total Keseluruhan</td>
+                        <td class="border border-slate-100 px-2 py-2 text-[11px] font-bold text-slate-600">${data.totalMaterial} material &middot; ${data.totalKedatangan} kedatangan</td>
+                        <td class="border border-slate-100 px-2 py-2 text-center text-xs font-bold text-slate-400">&mdash;</td>
+                        <td class="border border-slate-100 px-2 py-2 text-center text-sm font-black text-amber-700 whitespace-nowrap">${data.totalText ? escapeHTML(data.totalText) : '&mdash;'}</td>
+                     </tr>`;
+            body.innerHTML = html;
+        }
+
+        function rcvReportExportToggle(ev) {
+            if (ev) ev.stopPropagation();
+            const menu = document.getElementById('rcvReportExportMenu');
+            if (menu) menu.classList.toggle('hide');
+        }
+
+        function rcvReportExportPick(kind) {
+            const menu = document.getElementById('rcvReportExportMenu');
+            if (menu) menu.classList.add('hide');
+            if (kind === 'csv') exportRcvReportCSV(); else exportRcvReportExcel();
+        }
+
+        document.addEventListener('click', ev => {
+            const menu = document.getElementById('rcvReportExportMenu');
+            if (!menu || menu.classList.contains('hide')) return;
+            const wrap = document.getElementById('rcvReportExportWrap');
+            if (wrap && wrap.contains(ev.target)) return;
+            menu.classList.add('hide');
+        });
+
+        async function exportRcvReportExcel() {
+            if (typeof ExcelJS === 'undefined') return showToast('Module Excel belum dimuat', 'error');
+            const data = rcvReportBuild();
+            if (!data.groups.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
+            showToast('Menyiapkan Excel report material receipt...', 'info');
+            try {
+                const wb = new ExcelJS.Workbook();
+                const ws = wb.addWorksheet(String('Report GR ' + (data.month || 'Semua')).substring(0, 31));
+                ws.columns = [
+                    { header: 'No', key: 'no', width: 6 },
+                    { header: 'Supplier', key: 'supplier', width: 32 },
+                    { header: 'Material', key: 'material', width: 38 },
+                    { header: 'Qty', key: 'qty', width: 16 },
+                    { header: 'Total', key: 'total', width: 16 }
+                ];
+                const hdr = ws.getRow(1);
+                hdr.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                hdr.alignment = { vertical: 'middle', horizontal: 'center' };
+                hdr.height = 22;
+                hdr.eachCell(cell => { cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD97706' } }; });
+                let no = 0;
+                data.groups.forEach(g => {
+                    no += 1;
+                    g.bahan.forEach((b, i) => {
+                        ws.addRow({
+                            no: i === 0 ? no : '',
+                            supplier: i === 0 ? g.supplier : '',
+                            material: b.material,
+                            qty: rcvQtyPlain(b),
+                            total: i === 0 ? g.totalText : ''
+                        });
+                    });
+                });
+                const totalRow = ws.addRow({
+                    no: '',
+                    supplier: 'TOTAL KESELURUHAN',
+                    material: data.totalMaterial + ' material',
+                    qty: '',
+                    total: data.totalText
+                });
+                totalRow.font = { bold: true };
+                ws.views = [{ state: 'frozen', ySplit: 1 }];
+                const buffer = await wb.xlsx.writeBuffer();
+                saveAs(new Blob([buffer]), `Report_Material_Receipt_${data.month || 'semua'}.xlsx`);
+                showToast('Excel report material receipt berhasil diunduh (' + data.totalMaterial + ' material)', 'success');
+            } catch (err) {
+                console.error('Export Excel Report GR gagal:', err);
+                showToast('Gagal membuat Excel report: ' + (err && err.message ? err.message : err), 'error');
+            }
+        }
+
+        function exportRcvReportCSV() {
+            const data = rcvReportBuild();
+            if (!data.groups.length) return showToast('Tidak ada data Material Receipt pada periode ini.', 'error');
+            const rows = [['No', 'Supplier', 'Material', 'Qty', 'Total']];
+            let no = 0;
+            data.groups.forEach(g => {
+                no += 1;
+                g.bahan.forEach((b, i) => rows.push([
+                    i === 0 ? String(no) : '',
+                    escapeCSVField(i === 0 ? g.supplier : ''),
+                    escapeCSVField(b.material),
+                    escapeCSVField(rcvQtyPlain(b)),
+                    escapeCSVField(i === 0 ? g.totalText : '')
+                ]));
+            });
+            rows.push(['', 'TOTAL KESELURUHAN', escapeCSVField(data.totalMaterial + ' material'), '', escapeCSVField(data.totalText)]);
+            exportToCSV(`Report_Material_Receipt_${data.month || 'semua'}.csv`, rows);
+        }
+
         const FS_CARD_ICONS = {
             rcvBoardCard: 'rcvBoardFsIcon',
+            rcvReportCard: 'rcvReportFsIcon',
             qcLabCard: 'qcLabFsIcon',
             qcReceivingCard: 'qcReceivingFsIcon',
             qcPatrolCard: 'qcPatrolFsIcon',
@@ -9627,7 +9947,7 @@
             document.getElementById('uId').value = '';
             setPasswordHidden('uPassword', 'eyeIconUser');
             
-            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcScan', 'permRsSupplier', 'permEmpProfile', 'permWarehouse', 'permWhTransaksi', 'permWhLedger', 'permWhPrintdn'].forEach(cb => document.getElementById(cb).checked = false);
+            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcGrReport', 'permQcScan', 'permRsSupplier', 'permEmpProfile', 'permWarehouse', 'permWhTransaksi', 'permWhLedger', 'permWhPrintdn'].forEach(cb => document.getElementById(cb).checked = false);
             document.getElementById('qcSubPermsBox').classList.add('hide');
             document.getElementById('whSubPermsBox').classList.add('hide');
 
@@ -9671,7 +9991,7 @@
                     if(perms.includes('documents')) document.getElementById('permDocument').checked = true;
                     // Sub-menu Quality: bila akun punya sub-perm -> centang sesuai data;
                     // tanpa sub-perm sama sekali -> semua dicentang (artinya semua sub tampil)
-                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
+                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-gr-report': 'permQcGrReport', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
                     const adaQcSub = Object.keys(qcSubIds).some(t => perms.includes(t));
                     Object.keys(qcSubIds).forEach(t => document.getElementById(qcSubIds[t]).checked = adaQcSub ? perms.includes(t) : true);
                     if (u.role === 'superadmin' || perms.includes('warehouse')) document.getElementById('permWarehouse').checked = true;
@@ -9718,7 +10038,7 @@
                     permissions.push('gemba-qc');
                     // Sub-menu Quality granular: bila hanya SEBAGIAN yang dicentang -> simpan sub-perm;
                     // semua dicentang / kosong semua -> cukup 'gemba-qc' (semua anak tampil)
-                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
+                    const qcSubIds = { 'qc-lab': 'permQcLab', 'qc-patrol': 'permQcPatrol', 'qc-outgoing': 'permQcOutgoing', 'qc-receiving': 'permQcReceiving', 'qc-rcv-board': 'permQcRcvBoard', 'qc-gr-report': 'permQcGrReport', 'qc-scan': 'permQcScan', 'report-supplier': 'permRsSupplier', 'emp-profile': 'permEmpProfile' };
                     const ids = Object.keys(qcSubIds);
                     const checked = ids.filter(t => document.getElementById(qcSubIds[t]).checked);
                     if (checked.length > 0 && checked.length < ids.length) checked.forEach(t => permissions.push(t));
