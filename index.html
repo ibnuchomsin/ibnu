@@ -4119,7 +4119,11 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ op: 'login', username: uInput, password: pInput })
             })
-            .then(r => r.json())
+            .then(r => r.json().catch(function() {
+                // Balasan bukan JSON (mis. halaman error Cloudflare/proxy) —
+                // jangan tampilkan "password salah" untuk masalah koneksi/server.
+                return { ok: false, code: 'BAD_RESPONSE', error: 'Server tidak mengirim balasan yang valid (HTTP ' + r.status + '). Coba lagi sebentar.' };
+            }))
             .then(function(res) {
                 if (res.ok && res.requiresMfa) { showMfaPanel(res); return; }   // Verifikasi Dua Langkah
                 if (res.ok && res.user) {
@@ -4134,12 +4138,14 @@
                 } else if (res.code === 'LOGIN_RATE_LIMITED') {
                     processLoginFail(errorEl, loginBtn, originalBtnText, res.error);
                 } else {
-                    processLoginFail(errorEl, loginBtn, originalBtnText);
+                    // Tampilkan alasan dari server (mis. akun non-aktif, OTP gagal dikirim)
+                    // agar tidak selalu terlihat seperti password salah.
+                    processLoginFail(errorEl, loginBtn, originalBtnText, res.error);
                 }
             })
             .catch(function(err) {
                 console.log('Login Error:', err);
-                processLoginFail(errorEl, loginBtn, originalBtnText);
+                processLoginFail(errorEl, loginBtn, originalBtnText, 'Tidak dapat menghubungi server. Periksa koneksi internet lalu coba lagi.');
             });
         }
 
