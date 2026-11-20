@@ -1124,13 +1124,18 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <input type="date" id="rcvBoardDate" onchange="renderRcvBoard()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none" title="Tanggal Kedatangan">
-                        <button type="button" onclick="rcvBoardResetToday()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold" title="Kembali ke hari ini"><i class="fas fa-calendar-day"></i></button>
+                        <span id="rcvBoardClock" class="px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-xs font-black font-mono tabular-nums" title="Jam sekarang">--:--:--</span>
                         <button type="button" onclick="rcvBoardAddRow()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all flex items-center gap-2" title="Tambah baris kosong">
                             <i class="fas fa-plus"></i> Tambah Baris
                         </button>
                         <div class="flex items-center gap-1.5 border-l border-slate-200 pl-2">
-                            <button type="button" onclick="exportRcvBoardExcel()" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export kedatangan material ke Excel (.xlsx)"><i class="fas fa-file-excel"></i> XLSX</button>
-                            <button type="button" onclick="exportRcvBoardCSV()" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export kedatangan material ke CSV (.csv)"><i class="fas fa-file-csv"></i> CSV</button>
+                            <div id="rcvExportWrap" class="relative">
+                                <button type="button" id="rcvExportBtn" onclick="rcvExportToggle(event)" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export kedatangan material"><i class="fas fa-file-export"></i> Export <i class="fas fa-chevron-down text-[9px]"></i></button>
+                                <div id="rcvExportMenu" class="hide absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden">
+                                    <button type="button" onclick="rcvExportPick('xlsx')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-excel"></i> XLSX (.xlsx)</button>
+                                    <button type="button" onclick="rcvExportPick('csv')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-csv"></i> CSV (.csv)</button>
+                                </div>
+                            </div>
                             <button type="button" id="rcvBoardFsBtn" onclick="rcvBoardToggleFullscreen()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="rcvBoardFsIcon"></i></button>
                         </div>
                     </div>
@@ -7165,6 +7170,38 @@
             if (el) el.value = qcToday();
             renderRcvBoard();
         }
+
+        /* Jam berjalan pada header papan kedatangan (pengganti tombol "kembali hari ini") */
+        function rcvBoardTickClock() {
+            const el = document.getElementById('rcvBoardClock');
+            if (!el) return;
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
+            el.textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        }
+        rcvBoardTickClock();
+        setInterval(rcvBoardTickClock, 1000);
+
+        /* Dropdown Export: XLSX / CSV */
+        function rcvExportToggle(ev) {
+            if (ev) ev.stopPropagation();
+            const menu = document.getElementById('rcvExportMenu');
+            if (menu) menu.classList.toggle('hide');
+        }
+
+        function rcvExportPick(kind) {
+            const menu = document.getElementById('rcvExportMenu');
+            if (menu) menu.classList.add('hide');
+            if (kind === 'csv') exportRcvBoardCSV(); else exportRcvBoardExcel();
+        }
+
+        document.addEventListener('click', ev => {
+            const menu = document.getElementById('rcvExportMenu');
+            if (!menu || menu.classList.contains('hide')) return;
+            const wrap = document.getElementById('rcvExportWrap');
+            if (wrap && wrap.contains(ev.target)) return;
+            menu.classList.add('hide');
+        });
 
         let rcvBoardSlots = 5;
 
