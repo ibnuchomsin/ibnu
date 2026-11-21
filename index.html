@@ -406,6 +406,14 @@
                             <i class="fas fa-building-user text-xs w-4 text-center"></i>
                             <span>Master Customer</span>
                         </a>
+                        <a href="?tab=master-supplier" onclick="navigateTab(event, 'master-supplier')" id="nav-master-supplier" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-truck-field text-xs w-4 text-center"></i>
+                            <span>Master Supplier</span>
+                        </a>
+                        <a href="?tab=master-curah" onclick="navigateTab(event, 'master-curah')" id="nav-master-curah" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <i class="fas fa-cubes text-xs w-4 text-center"></i>
+                            <span>Master Curah</span>
+                        </a>
                     </div>
                 </div>
             </nav>
@@ -1904,6 +1912,90 @@
             </div>
         </section>
 
+        <!-- ===== VIEW: MASTER DATA SUPPLIER ===== -->
+        <section id="view-master-supplier" class="p-4 md:p-8 space-y-6 hide">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="relative flex-1 min-w-[200px] w-full">
+                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="msSearch" oninput="renderMasterSuppliers()" placeholder="Cari ID supplier, nama supplier, kontak, alamat..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-emerald-500 outline-none transition-all">
+                </div>
+                <button onclick="openMasterSupplierModal('create')" class="w-full md:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i> Tambah Supplier
+                </button>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-emerald-50 p-2 rounded-lg text-emerald-600"><i class="fas fa-truck-field"></i></div>
+                        <h2 class="text-sm font-extrabold text-slate-800">Master Data Supplier</h2>
+                    </div>
+                    <span id="msCount" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">0 Supplier</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse master-table">
+                        <thead>
+                            <tr>
+                                <th class="w-10 text-center">No</th>
+                                <th>ID Supplier</th>
+                                <th>Nama Supplier</th>
+                                <th>Kontak / PIC</th>
+                                <th>Alamat</th>
+                                <th class="text-center w-24">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="msTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="msEmptyState" class="p-10 text-center hide">
+                    <div class="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-truck-field"></i></div>
+                    <h4 class="font-bold text-slate-700 text-sm">Belum ada data supplier</h4>
+                    <p class="text-xs text-slate-500 mt-1">Klik "Tambah Supplier" untuk menambah data pertama.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== VIEW: MASTER DATA CURAH ===== -->
+        <section id="view-master-curah" class="p-4 md:p-8 space-y-6 hide">
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="relative flex-1 min-w-[200px] w-full">
+                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="mcuSearch" oninput="renderMasterCurahs()" placeholder="Cari kode curah, nama material, satuan..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-cyan-500 outline-none transition-all">
+                </div>
+                <button onclick="openMasterCurahModal('create')" class="w-full md:w-auto px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl text-xs font-bold shadow-md shadow-cyan-600/20 transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-plus"></i> Tambah Curah
+                </button>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-cyan-50 p-2 rounded-lg text-cyan-600"><i class="fas fa-cubes"></i></div>
+                        <h2 class="text-sm font-extrabold text-slate-800">Master Data Curah</h2>
+                    </div>
+                    <span id="mcuCount" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">0 Curah</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse master-table">
+                        <thead>
+                            <tr>
+                                <th class="w-10 text-center">No</th>
+                                <th>Kode Curah</th>
+                                <th>Nama Material</th>
+                                <th class="text-center">Satuan</th>
+                                <th>Keterangan</th>
+                                <th class="text-center w-24">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mcuTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="mcuEmptyState" class="p-10 text-center hide">
+                    <div class="w-16 h-16 bg-cyan-50 text-cyan-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-cubes"></i></div>
+                    <h4 class="font-bold text-slate-700 text-sm">Belum ada data curah</h4>
+                    <p class="text-xs text-slate-500 mt-1">Klik "Tambah Curah" untuk menambah data pertama.</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- MODAL TIKET -->
@@ -3312,6 +3404,82 @@
         </div>
     </div>
 
+    <!-- MODAL MASTER SUPPLIER -->
+    <div id="modalMasterSupplier" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('modalMasterSupplier')">
+        <div class="bg-white max-w-md w-full rounded-3xl overflow-hidden shadow-2xl modal-animate" onclick="event.stopPropagation()">
+            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 id="modalMasterSupplierTitle" class="font-bold text-slate-800 text-sm">Tambah Supplier</h3>
+                <button onclick="closeModal('modalMasterSupplier')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="formMasterSupplier" onsubmit="saveMasterSupplier(event)" class="p-5 space-y-4">
+                <input type="hidden" id="msRecordId">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">ID Supplier</label>
+                    <input type="text" id="msSupId" class="w-full text-xs font-mono border border-slate-200 rounded-lg px-3 py-2 uppercase focus:border-emerald-500 outline-none" placeholder="SUP-001" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Supplier</label>
+                    <input type="text" id="msName" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase focus:border-emerald-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Kontak / PIC</label>
+                    <input type="text" id="msContact" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 focus:border-emerald-500 outline-none" placeholder="Nama PIC / No. Telepon">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Alamat Lengkap</label>
+                    <textarea id="msAddress" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 h-20 focus:border-emerald-500 outline-none"></textarea>
+                </div>
+                <div class="pt-3 mt-2 border-t border-slate-100 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalMasterSupplier')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition-colors shadow-sm">Simpan Supplier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL MASTER CURAH -->
+    <div id="modalMasterCurah" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('modalMasterCurah')">
+        <div class="bg-white max-w-md w-full rounded-3xl overflow-hidden shadow-2xl modal-animate" onclick="event.stopPropagation()">
+            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 id="modalMasterCurahTitle" class="font-bold text-slate-800 text-sm">Tambah Curah</h3>
+                <button onclick="closeModal('modalMasterCurah')" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="formMasterCurah" onsubmit="saveMasterCurah(event)" class="p-5 space-y-4">
+                <input type="hidden" id="mcuRecordId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Kode Curah</label>
+                        <input type="text" id="mcuCurahId" class="w-full text-xs font-mono border border-slate-200 rounded-lg px-3 py-2 uppercase focus:border-cyan-500 outline-none" placeholder="CRH-001" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">Satuan</label>
+                        <input type="text" id="mcuUnit" list="mcuUnitList" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase focus:border-cyan-500 outline-none" placeholder="KG / LITER" required>
+                        <datalist id="mcuUnitList">
+                            <option value="KG"></option>
+                            <option value="LITER"></option>
+                            <option value="TON"></option>
+                            <option value="SAK"></option>
+                            <option value="DRUM"></option>
+                            <option value="PCS"></option>
+                        </datalist>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Nama Material Curah</label>
+                    <input type="text" id="mcuName" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 uppercase focus:border-cyan-500 outline-none" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Keterangan</label>
+                    <textarea id="mcuDescription" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 h-20 focus:border-cyan-500 outline-none" placeholder="Opsional"></textarea>
+                </div>
+                <div class="pt-3 mt-2 border-t border-slate-100 flex justify-end gap-2">
+                    <button type="button" onclick="closeModal('modalMasterCurah')" class="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-colors shadow-sm">Simpan Curah</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL GANTI PASSWORD (ubah password akun sendiri) -->
     <div id="passwordModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('passwordModal')">
         <div class="bg-white max-w-sm w-full rounded-3xl overflow-hidden shadow-2xl modal-animate" onclick="event.stopPropagation()">
@@ -3518,6 +3686,8 @@
                 localStorage.setItem('kaizen_folders', JSON.stringify(FOLDERS));
                 localStorage.setItem('kaizen_master_products', JSON.stringify(MP_DATA));
                 localStorage.setItem('kaizen_master_customers', JSON.stringify(MC_DATA));
+                localStorage.setItem('kaizen_master_suppliers', JSON.stringify(MSP_DATA));
+                localStorage.setItem('kaizen_master_curahs', JSON.stringify(MCU_DATA));
                 localStorage.setItem('kaizen_wh', JSON.stringify(WH_DATA));
                 updateSidebarBadges();
             } catch (e) {
@@ -3612,6 +3782,8 @@
         // Master Data (mirror QMS #products / #customers)
         let MP_DATA = JSON.parse(localStorage.getItem('kaizen_master_products')) || [];
         let MC_DATA = JSON.parse(localStorage.getItem('kaizen_master_customers')) || [];
+        let MSP_DATA = JSON.parse(localStorage.getItem('kaizen_master_suppliers')) || [];
+        let MCU_DATA = JSON.parse(localStorage.getItem('kaizen_master_curahs')) || [];
         let WH_DATA = JSON.parse(localStorage.getItem('kaizen_wh')) || [];   // transaksi gudang (inbound/outbound)
         function debounce(func, wait) {
             let timeout;
@@ -3849,6 +4021,8 @@
             'emp-profile':     { tab: 'emp-profile',     perm: 'gemba-qc', tambah: () => openEmpModal('create'),               cek: id => QC_DATA.some(o => o.id === id), edit: id => openEmpModal('edit', id) },
             'master-produk':   { tab: 'master-produk',   adminOnly: true,  tambah: () => openMasterProductModal('create'),     cek: id => MP_DATA.some(o => o.id === id), edit: id => openMasterProductModal('edit', id) },
             'master-customer': { tab: 'master-customer', adminOnly: true,  tambah: () => openMasterCustomerModal('create'),    cek: id => MC_DATA.some(o => o.id === id), edit: id => openMasterCustomerModal('edit', id) },
+            'master-supplier': { tab: 'master-supplier', adminOnly: true,  tambah: () => openMasterSupplierModal('create'),    cek: id => MSP_DATA.some(o => o.id === id), edit: id => openMasterSupplierModal('edit', id) },
+            'master-curah':    { tab: 'master-curah',    adminOnly: true,  tambah: () => openMasterCurahModal('create'),       cek: id => MCU_DATA.some(o => o.id === id), edit: id => openMasterCurahModal('edit', id) },
             'dokumen':  { tab: 'documents', perm: 'documents',tambah: () => openDocumentModal('create'), cek: id => DOCUMENTS.some(o => o.id === id),         edit: id => openDocumentModal('edit', id) }
         };
         window.addEventListener('hashchange', routeHashAction);
@@ -3874,6 +4048,8 @@
                     if (serverData.Folders) FOLDERS = serverData.Folders;
                     if (serverData.Products) MP_DATA = serverData.Products;
                     if (serverData.Customers) MC_DATA = serverData.Customers;
+                    if (serverData.Suppliers) MSP_DATA = serverData.Suppliers;
+                    if (serverData.Curahs) MCU_DATA = serverData.Curahs;
                     if (serverData.WhTx) WH_DATA = serverData.WhTx;
 
                     persistData();
@@ -3963,7 +4139,7 @@
                 if (WH_TABS.includes(initialTab) && !whChildAllowed(perms, initialTab)) initialTab = 'dashboard';
                 if (initialTab === 'documents' && !perms.includes('documents')) initialTab = 'dashboard';
                 if (initialTab === 'reports' || initialTab === 'users') initialTab = 'dashboard';
-                if ((initialTab === 'master-produk' || initialTab === 'master-customer') && user.role !== 'admin') initialTab = 'dashboard';
+                if (['master-produk', 'master-customer', 'master-supplier', 'master-curah'].includes(initialTab) && user.role !== 'admin') initialTab = 'dashboard';
             }
             switchTab(initialTab);
             
@@ -4255,7 +4431,7 @@
         /* Kunci link "?tab=<modul>" (menu sidebar): hanya nama tab yang sah */
         function tabDariURL() {
             const t = (new URLSearchParams(location.search).get('tab') || '').trim();
-            const TAB_SAHSIH = ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-gr-report', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'documents', 'reports', 'users', 'master-produk', 'master-customer'];
+            const TAB_SAHSIH = ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-gr-report', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'documents', 'reports', 'users', 'master-produk', 'master-customer', 'master-supplier', 'master-curah'];
             if (!TAB_SAHSIH.includes(t) || t === 'dashboard') return null;   // null = pakai default
             return t;
         }
@@ -4295,7 +4471,7 @@
                     if ((initialTab === 'gemba-qc' || QC_TABS.includes(initialTab)) && !perms.includes('gemba-qc')) initialTab = 'dashboard';
                 if (initialTab !== 'gemba-qc' && QC_TABS.includes(initialTab) && !qcChildAllowed(perms, initialTab)) initialTab = 'dashboard';
                 if (WH_TABS.includes(initialTab) && !whChildAllowed(perms, initialTab)) initialTab = 'dashboard';
-                if ((initialTab === 'master-produk' || initialTab === 'master-customer') && user.role !== 'admin') initialTab = 'dashboard';
+                if (['master-produk', 'master-customer', 'master-supplier', 'master-curah'].includes(initialTab) && user.role !== 'admin') initialTab = 'dashboard';
                 }
                 switchTab(initialTab);
                 fetchDataFromServer();   // .then -> routeHashAction: modal target dari hash (#/...) terbuka otomatis
@@ -4402,11 +4578,11 @@
                 if (tabId === 'documents' && !perms.includes('documents')) { showToast('Anda tidak memiliki akses ke menu Arsip Dokumen!', 'error'); return; }
                 if (tabId === 'reports') { showToast('Akses Ditolak! Hanya Superadmin.', 'error'); return; }
                 if (tabId === 'users' && user.role !== 'admin') { showToast('Akses Ditolak! Kelola akun hanya untuk Admin & Superadmin.', 'error'); return; }
-                if ((tabId === 'master-produk' || tabId === 'master-customer') && user.role !== 'admin') { showToast('Akses Ditolak! Master Data hanya untuk Admin & Superadmin.', 'error'); return; }
+                if (['master-produk', 'master-customer', 'master-supplier', 'master-curah'].includes(tabId) && user.role !== 'admin') { showToast('Akses Ditolak! Master Data hanya untuk Admin & Superadmin.', 'error'); return; }
             }
 
             APP_STATE.activeTab = tabId;
-            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-gr-report', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'wh-stockreport', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer'].forEach(t => {
+            ['dashboard', 'tickets', 'assets', 'gemba', 'gemba-qc', 'qc-lab', 'qc-patrol', 'qc-outgoing', 'qc-receiving', 'qc-rcv-board', 'qc-gr-report', 'qc-scan', 'report-supplier', 'emp-profile', 'wh-transaksi', 'wh-ledger', 'wh-printdn', 'wh-stockreport', 'reports', 'documents', 'users', 'master', 'master-produk', 'master-customer', 'master-supplier', 'master-curah'].forEach(t => {
                 const el = document.getElementById(`view-${t}`);
                 if (el) el.classList.add('hide');
 
@@ -4433,7 +4609,7 @@
                 activeMobileNav.className = "flex flex-col items-center gap-1 text-[10px] font-semibold text-brand-400";
             }
 
-            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-gr-report': 'Report Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', 'wh-stockreport': 'Warehouse — Stock Report', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer' };
+            const titles = { dashboard: 'Dashboard Analytics', tickets: 'Helpdesk & Tiket IT', assets: 'Pendataan Aset IT', gemba: 'Audit Gemba HSE (5R)', 'gemba-qc': 'Audit Gemba QC', 'qc-lab': 'QC Lab (Laboratory Analysis)', 'qc-patrol': 'QC Patrol (In-Process Inspection)', 'qc-outgoing': 'QC Outgoing (Pre-Delivery)', 'qc-receiving': 'QC Receiving (Incoming Material)', 'qc-rcv-board': 'Material Receipt', 'qc-gr-report': 'Report Material Receipt', 'qc-scan': 'Scan Barcode & QR', 'report-supplier': 'Report Supplier', 'emp-profile': 'Employee Profile', 'wh-transaksi': 'Warehouse — Transaksi', 'wh-ledger': 'Warehouse — Report Detail', 'wh-printdn': 'Warehouse — Print DN', 'wh-stockreport': 'Warehouse — Stock Report', reports: 'Pusat Laporan & Ekspor', documents: 'Arsip Dokumen', users: 'Manajemen User', 'master-produk': 'Master Data Produk', 'master-customer': 'Master Data Customer', 'master-supplier': 'Master Data Supplier', 'master-curah': 'Master Data Curah' };
             document.getElementById('headerTitle').textContent = titles[tabId] || 'Portal';
 
             // Sub-menu QC: auto-buka + sorot parent saat salah satu tab QC aktif
@@ -4446,7 +4622,7 @@
             }
 
             // Sub-menu Master Data: auto-buka + sorot parent saat tab master aktif
-            if (tabId === 'master-produk' || tabId === 'master-customer') {
+            if (['master-produk', 'master-customer', 'master-supplier', 'master-curah'].includes(tabId)) {
                 toggleMasterSubmenu(true);
                 const parent = document.getElementById('nav-master');
                 if (parent) parent.classList.add('bg-slate-800', 'text-white');
@@ -4478,6 +4654,8 @@
             if (tabId === 'users') renderUsers();
             if (tabId === 'master-produk') renderMasterProducts();
             if (tabId === 'master-customer') renderMasterCustomers();
+            if (tabId === 'master-supplier') renderMasterSuppliers();
+            if (tabId === 'master-curah') renderMasterCurahs();
             if (tabId === 'wh-transaksi') renderWhTransaksi();
             if (tabId === 'wh-ledger') renderWhLedger();
             if (tabId === 'wh-printdn') renderWhPrintDn();
@@ -6272,6 +6450,144 @@
             showToast(idEdit ? 'Customer berhasil diperbarui!' : 'Customer baru berhasil ditambahkan!', 'success');
             syncToSheet('Customers', rec);
             produkTerkaskade.forEach(p => syncToSheet('Products', p));
+        }
+
+        function renderMasterSuppliers() {
+            const tbody = document.getElementById('msTableBody');
+            if (!tbody) return;
+            const empty = document.getElementById('msEmptyState');
+            const cnt = document.getElementById('msCount');
+            const q = ((document.getElementById('msSearch') || {}).value || '').toLowerCase().trim();
+            const rows = MSP_DATA.filter(s => !q || [s.supId, s.name, s.contact, s.address].some(v => String(v || '').toLowerCase().includes(q)));
+            tbody.innerHTML = rows.map((s, i) => `
+                <tr class="hover:bg-emerald-50/40 transition-colors">
+                    <td class="text-center text-slate-400">${i + 1}</td>
+                    <td class="font-mono text-[11px]">${escapeHTML(s.supId || '')}</td>
+                    <td>${escapeHTML(s.name || '')}</td>
+                    <td>${s.contact ? escapeHTML(s.contact) : '<span class="text-slate-400">—</span>'}</td>
+                    <td class="whitespace-normal">${s.address ? escapeHTML(s.address) : '<span class="text-slate-400">—</span>'}</td>
+                    <td class="text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openMasterSupplierModal('edit', '${s.id}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-500 transition-colors" title="Edit Supplier"><i class="fas fa-pen text-[10px]"></i></button>
+                            <button onclick="triggerDelete('supplier', '${s.id}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-red-600 hover:text-white text-slate-500 transition-colors" title="Hapus Supplier"><i class="fas fa-trash text-[10px]"></i></button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+            if (empty) empty.classList.toggle('hide', rows.length > 0);
+            if (cnt) cnt.textContent = MSP_DATA.length + ' Supplier';
+        }
+
+        function renderMasterCurahs() {
+            const tbody = document.getElementById('mcuTableBody');
+            if (!tbody) return;
+            const empty = document.getElementById('mcuEmptyState');
+            const cnt = document.getElementById('mcuCount');
+            const q = ((document.getElementById('mcuSearch') || {}).value || '').toLowerCase().trim();
+            const rows = MCU_DATA.filter(c => !q || [c.curahId, c.name, c.unit, c.description].some(v => String(v || '').toLowerCase().includes(q)));
+            tbody.innerHTML = rows.map((c, i) => `
+                <tr class="hover:bg-cyan-50/40 transition-colors">
+                    <td class="text-center text-slate-400">${i + 1}</td>
+                    <td class="font-mono text-[11px]">${escapeHTML(c.curahId || '')}</td>
+                    <td>${escapeHTML(c.name || '')}</td>
+                    <td class="text-center">${c.unit ? escapeHTML(c.unit) : '<span class="text-slate-400">—</span>'}</td>
+                    <td class="whitespace-normal">${c.description ? escapeHTML(c.description) : '<span class="text-slate-400">—</span>'}</td>
+                    <td class="text-center">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openMasterCurahModal('edit', '${c.id}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-cyan-600 hover:text-white text-slate-500 transition-colors" title="Edit Curah"><i class="fas fa-pen text-[10px]"></i></button>
+                            <button onclick="triggerDelete('curah', '${c.id}')" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-red-600 hover:text-white text-slate-500 transition-colors" title="Hapus Curah"><i class="fas fa-trash text-[10px]"></i></button>
+                        </div>
+                    </td>
+                </tr>`).join('');
+            if (empty) empty.classList.toggle('hide', rows.length > 0);
+            if (cnt) cnt.textContent = MCU_DATA.length + ' Curah';
+        }
+
+        function openMasterSupplierModal(action, id = null) {
+            document.getElementById('formMasterSupplier').reset();
+            document.getElementById('msRecordId').value = '';
+            if (action === 'edit' && id) {
+                document.getElementById('modalMasterSupplierTitle').textContent = 'Edit Supplier';
+                const s = MSP_DATA.find(x => x.id === id);
+                if (s) {
+                    document.getElementById('msRecordId').value = s.id;
+                    document.getElementById('msSupId').value = s.supId || '';
+                    document.getElementById('msName').value = s.name || '';
+                    document.getElementById('msContact').value = s.contact || '';
+                    document.getElementById('msAddress').value = s.address || '';
+                }
+            } else {
+                document.getElementById('modalMasterSupplierTitle').textContent = 'Tambah Supplier';
+            }
+            openModal('modalMasterSupplier');
+        }
+
+        function saveMasterSupplier(e) {
+            e.preventDefault();
+            const peran = (APP_STATE.currentUser || {}).role || '';
+            if (!['superadmin', 'admin'].includes(peran)) { showToast('Master Data hanya untuk Admin!', 'error'); return; }
+            const idEdit = document.getElementById('msRecordId').value;
+            const supId = document.getElementById('msSupId').value.trim().toUpperCase();
+            const name = document.getElementById('msName').value.trim().toUpperCase();
+            const contact = document.getElementById('msContact').value.trim();
+            const address = document.getElementById('msAddress').value.trim();
+
+            if (!supId || !name) { showToast('ID Supplier dan Nama Supplier wajib diisi!', 'error'); return; }
+            if (MSP_DATA.some(s => String(s.supId || '').toUpperCase() === supId && s.id !== idEdit)) {
+                showToast('ID Supplier "' + supId + '" sudah terdaftar!', 'error'); return;
+            }
+
+            const rec = { id: idEdit || ('MSP-' + Date.now()), supId, name, contact, address };
+            if (idEdit) MSP_DATA = MSP_DATA.map(s => s.id === idEdit ? rec : s);
+            else MSP_DATA.push(rec);
+            persistData();
+            renderMasterSuppliers();
+            closeModal('modalMasterSupplier');
+            showToast(idEdit ? 'Supplier berhasil diperbarui!' : 'Supplier baru berhasil ditambahkan!', 'success');
+            syncToSheet('Suppliers', rec);
+        }
+
+        function openMasterCurahModal(action, id = null) {
+            document.getElementById('formMasterCurah').reset();
+            document.getElementById('mcuRecordId').value = '';
+            if (action === 'edit' && id) {
+                document.getElementById('modalMasterCurahTitle').textContent = 'Edit Curah';
+                const c = MCU_DATA.find(x => x.id === id);
+                if (c) {
+                    document.getElementById('mcuRecordId').value = c.id;
+                    document.getElementById('mcuCurahId').value = c.curahId || '';
+                    document.getElementById('mcuName').value = c.name || '';
+                    document.getElementById('mcuUnit').value = c.unit || '';
+                    document.getElementById('mcuDescription').value = c.description || '';
+                }
+            } else {
+                document.getElementById('modalMasterCurahTitle').textContent = 'Tambah Curah';
+            }
+            openModal('modalMasterCurah');
+        }
+
+        function saveMasterCurah(e) {
+            e.preventDefault();
+            const peran = (APP_STATE.currentUser || {}).role || '';
+            if (!['superadmin', 'admin'].includes(peran)) { showToast('Master Data hanya untuk Admin!', 'error'); return; }
+            const idEdit = document.getElementById('mcuRecordId').value;
+            const curahId = document.getElementById('mcuCurahId').value.trim().toUpperCase();
+            const name = document.getElementById('mcuName').value.trim().toUpperCase();
+            const unit = document.getElementById('mcuUnit').value.trim().toUpperCase();
+            const description = document.getElementById('mcuDescription').value.trim();
+
+            if (!curahId || !name || !unit) { showToast('Kode Curah, Nama Material, dan Satuan wajib diisi!', 'error'); return; }
+            if (MCU_DATA.some(c => String(c.curahId || '').toUpperCase() === curahId && c.id !== idEdit)) {
+                showToast('Kode Curah "' + curahId + '" sudah terdaftar!', 'error'); return;
+            }
+
+            const rec = { id: idEdit || ('MCR-' + Date.now()), curahId, name, unit, description };
+            if (idEdit) MCU_DATA = MCU_DATA.map(c => c.id === idEdit ? rec : c);
+            else MCU_DATA.push(rec);
+            persistData();
+            renderMasterCurahs();
+            closeModal('modalMasterCurah');
+            showToast(idEdit ? 'Data curah berhasil diperbarui!' : 'Data curah baru berhasil ditambahkan!', 'success');
+            syncToSheet('Curahs', rec);
         }
         /* =================== /MASTER DATA =================== */
 
@@ -10927,7 +11243,7 @@
 
             const peran = (APP_STATE.currentUser || {}).role || '';
             const diizinkan = type === 'user' ? peran === 'superadmin'
-                : (type === 'produk' || type === 'customer') ? ['superadmin', 'admin'].includes(peran)
+                : (type === 'produk' || type === 'customer' || type === 'supplier' || type === 'curah') ? ['superadmin', 'admin'].includes(peran)
                 : type === 'qc' ? true   // Papan Material Receipt: semua peran boleh hapus kedatangan
                 : bolehHapusData();
             if (!diizinkan) {
@@ -10943,7 +11259,7 @@
                     for (const doc of orphanDocs) await deleteFromSheet('Documents', doc.id);
                     await deleteFromSheet('Folders', id);
                 } else {
-                    const peta = { ticket: 'Tickets', asset: 'Assets', gemba: 'Gemba', 'gemba-qc': 'GembaQc', document: 'Documents', user: 'Users', qc: 'Qc', produk: 'Products', customer: 'Customers', 'wh-tx': 'WhTx' };
+                    const peta = { ticket: 'Tickets', asset: 'Assets', gemba: 'Gemba', 'gemba-qc': 'GembaQc', document: 'Documents', user: 'Users', qc: 'Qc', produk: 'Products', customer: 'Customers', supplier: 'Suppliers', curah: 'Curahs', 'wh-tx': 'WhTx' };
                     for (const tid of ids) await deleteFromSheet(peta[type], tid);
                 }
             } catch (err) {
@@ -10969,6 +11285,8 @@
             if (type === 'document') DOCUMENTS = DOCUMENTS.filter(x => x.id !== id);
             if (type === 'user') USERS = USERS.filter(x => x.id !== id);
             if (type === 'produk') MP_DATA = MP_DATA.filter(x => x.id !== id);
+            if (type === 'supplier') MSP_DATA = MSP_DATA.filter(x => x.id !== id);
+            if (type === 'curah') MCU_DATA = MCU_DATA.filter(x => x.id !== id);
             if (type === 'wh-tx') WH_DATA = WH_DATA.filter(x => x.id !== id);
             if (type === 'customer') {
                 // Kaskade (mirror QMS): produk yang memakai customer ini -> customerName dikosongkan
@@ -11000,6 +11318,8 @@
             if (type === 'user') renderUsers();
             if (type === 'produk') renderMasterProducts();
             if (type === 'customer') { renderMasterCustomers(); renderMasterProducts(); }
+            if (type === 'supplier') renderMasterSuppliers();
+            if (type === 'curah') renderMasterCurahs();
             if (type === 'wh-tx') { renderWhLedger(); renderWhTransaksi(); renderWhStockReport(); }
             renderDashboard();
         }

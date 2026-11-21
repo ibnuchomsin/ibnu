@@ -92,6 +92,8 @@ $MAP = [
     'minStock' => 'min_stock',      'maxStock' => 'max_stock',
     'currentStock' => 'current_stock', 'customerName' => 'customer_name',
     'custId' => 'cust_id',
+    // Master Data Supplier & Curah
+    'supId' => 'sup_id',            'curahId' => 'curah_id',
 ];
 $REVERSE = array_flip($MAP);
 
@@ -155,6 +157,14 @@ $TABLES = [
     'Customers' => [
         'table' => 'master_customers',
         'cols'  => ['id','cust_id','name','address','created_at'],
+    ],
+    'Suppliers' => [
+        'table' => 'master_suppliers',
+        'cols'  => ['id','sup_id','name','address','contact','created_at'],
+    ],
+    'Curahs' => [
+        'table' => 'master_curahs',
+        'cols'  => ['id','curah_id','name','unit','description','created_at'],
     ],
     // Transaksi gudang (Warehouse inbound/outbound): id "WH-<ts>-<i>" dari client.
     // partNo/partName dipetakan otomatis ke part_no/part_name via $MAP,
@@ -972,7 +982,13 @@ case 'getInitialData': {
     requireAuth();
     $payload = [];
     foreach ($TABLES as $sheet => $cfg) {
-        $res = $DB->query('SELECT * FROM `' . $cfg['table'] . '` ORDER BY 1');
+        try {
+            $res = $DB->query('SELECT * FROM `' . $cfg['table'] . '` ORDER BY 1');
+        } catch (mysqli_sql_exception $e) {
+            // 1146 = tabel belum dimigrasi: jangan gagalkan seluruh data awal portal
+            if ((int)$e->getCode() === 1146) { $payload[$sheet] = []; continue; }
+            fail('Query gagal pada ' . $cfg['table'] . ': ' . $e->getMessage(), 500);
+        }
         if ($res === false) fail('Query gagal pada ' . $cfg['table'] . ': ' . $DB->error, 500);
         $payload[$sheet] = rowsToApp($res, $cfg);
     }
@@ -1024,7 +1040,7 @@ case 'saveRecord': {
         fail('Tidak diizinkan: pengelolaan user hanya untuk Admin.', 403);
     }
     // Master Data (Produk/Customer): hanya Admin & Superadmin
-    if (($sheet === 'Products' || $sheet === 'Customers') && !in_array($_SESSION['kaizen_role'] ?? '', ['superadmin', 'admin'], true)) {
+    if (in_array($sheet, ['Products', 'Customers', 'Suppliers', 'Curahs'], true) && !in_array($_SESSION['kaizen_role'] ?? '', ['superadmin', 'admin'], true)) {
         fail('Tidak diizinkan: Master Data hanya untuk Admin.', 403);
     }
     $cfg = $TABLES[$sheet];
@@ -1105,7 +1121,7 @@ case 'deleteRecord': {
     $role = $_SESSION['kaizen_role'] ?? '';
     if ($sheet === 'Users') {
         if ($role !== 'superadmin') fail('Tidak diizinkan: hapus akun hanya untuk Superadmin.', 403);
-    } else if ($sheet === 'Products' || $sheet === 'Customers') {
+    } else if (in_array($sheet, ['Products', 'Customers', 'Suppliers', 'Curahs'], true)) {
         if (!in_array($role, ['superadmin', 'admin'], true)) fail('Tidak diizinkan: Master Data hanya untuk Admin.', 403);
     } else if ($sheet === 'Qc') {
         // Papan Material Receipt: semua peran yang login boleh menghapus data QC/kedatangan
