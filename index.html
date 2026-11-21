@@ -1176,53 +1176,55 @@
 
         <section id="view-qc-gr-report" class="p-3 md:p-5 space-y-4 hide">
             <div id="rcvReportCard" class="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-3">
-                <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                    <div class="flex items-center gap-3 min-w-0">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-3 min-w-0 flex-1">
                         <div class="bg-amber-50 p-2.5 rounded-xl text-amber-600 border border-amber-100 shrink-0"><i class="fas fa-file-invoice"></i></div>
                         <div class="min-w-0">
                             <h2 class="text-sm font-extrabold text-slate-800 leading-tight">Report Material Receipt</h2>
                             <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Matriks Penerimaan Material per Tanggal &ndash; Pilih Rentang Tanggal</p>
                         </div>
                     </div>
-                    <button type="button" id="rcvReportFsBtn" onclick="toggleCardFullscreen('rcvReportCard')" class="shrink-0 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="rcvReportFsIcon"></i></button>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <select id="rcvReportSupplier" onchange="renderRcvReport()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none max-w-[190px]" title="Filter Supplier">
-                        <option value="">Semua Supplier</option>
-                    </select>
-                    <div id="rcvReportPeriodWrap" class="relative">
-                        <button type="button" id="rcvReportPeriodBtn" onclick="rcvReportPeriodToggle(event)" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-white focus:border-amber-500 outline-none flex items-center gap-2" title="Pilih rentang tanggal (dd-mm-yyyy)">
-                            <i class="fas fa-calendar-days text-slate-400 text-[11px]"></i>
-                            <span id="rcvReportPeriodLabel">Pilih tanggal</span>
-                            <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
-                        </button>
-                        <div id="rcvReportPeriodPanel" class="hide absolute left-0 md:left-auto md:right-0 mt-1 w-[286px] bg-white border border-slate-200 rounded-xl shadow-xl z-30 p-3 space-y-2.5">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Dari</label>
-                                    <input type="date" id="rcvReportFrom" onchange="rcvReportPeriodApply()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-amber-500">
+                    <div class="flex flex-wrap items-center justify-end gap-2">
+                        <div class="flex w-full items-center gap-2 md:w-auto">
+                        <select id="rcvReportSupplier" onchange="renderRcvReport()" class="min-w-0 flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none md:max-w-[190px] md:flex-none" title="Filter Supplier">
+                            <option value="">Semua Supplier</option>
+                        </select>
+                        <div id="rcvReportPeriodWrap" class="relative shrink-0">
+                            <button type="button" id="rcvReportPeriodBtn" onclick="rcvReportPeriodToggle(event)" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold hover:bg-white focus:border-amber-500 outline-none flex items-center gap-2" title="Pilih rentang tanggal (dd-mm-yyyy)">
+                                <i class="fas fa-calendar-days text-slate-400 text-[11px]"></i>
+                                <span id="rcvReportPeriodLabel">Pilih tanggal</span>
+                                <i class="fas fa-chevron-down text-[9px] text-slate-400"></i>
+                            </button>
+                            <div id="rcvReportPeriodPanel" class="hide absolute left-0 md:left-auto md:right-0 mt-1 w-[286px] bg-white border border-slate-200 rounded-xl shadow-xl z-30 p-3 space-y-2.5">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Dari</label>
+                                        <input type="date" id="rcvReportFrom" onchange="rcvReportPeriodApply()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-amber-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Sampai</label>
+                                        <input type="date" id="rcvReportTo" onchange="rcvReportPeriodApply()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-amber-500">
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Sampai</label>
-                                    <input type="date" id="rcvReportTo" onchange="rcvReportPeriodApply()" class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-slate-50 outline-none font-semibold focus:border-amber-500">
+                                <div class="flex flex-wrap gap-1.5">
+                                    <button type="button" onclick="rcvReportPeriodPreset('today')" class="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold hover:bg-amber-100">Hari ini</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('month')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Bulan ini</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('last')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Bulan lalu</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('7')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">7 hari</button>
+                                    <button type="button" onclick="rcvReportPeriodPreset('all')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Semua</button>
                                 </div>
+                                <button type="button" onclick="rcvReportPeriodClose()" class="w-full py-1.5 rounded-lg bg-slate-800 text-white text-[11px] font-bold hover:bg-slate-900 transition-colors">Tutup</button>
                             </div>
-                            <div class="flex flex-wrap gap-1.5">
-                                <button type="button" onclick="rcvReportPeriodPreset('today')" class="px-2 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold hover:bg-amber-100">Hari ini</button>
-                                <button type="button" onclick="rcvReportPeriodPreset('month')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Bulan ini</button>
-                                <button type="button" onclick="rcvReportPeriodPreset('last')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Bulan lalu</button>
-                                <button type="button" onclick="rcvReportPeriodPreset('7')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">7 hari</button>
-                                <button type="button" onclick="rcvReportPeriodPreset('all')" class="px-2 py-1 rounded-lg bg-slate-50 text-slate-600 border border-slate-200 text-[10px] font-bold hover:bg-slate-100">Semua</button>
+                        </div>
+                        </div>
+                        <div id="rcvReportExportWrap" class="relative">
+                            <button type="button" id="rcvReportExportBtn" onclick="rcvReportExportToggle(event)" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export report material receipt"><i class="fas fa-file-export"></i> Export <i class="fas fa-chevron-down text-[9px]"></i></button>
+                            <div id="rcvReportExportMenu" class="hide absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden">
+                                <button type="button" onclick="rcvReportExportPick('xlsx')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-excel"></i> XLSX (.xlsx)</button>
+                                <button type="button" onclick="rcvReportExportPick('csv')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-csv"></i> CSV (.csv)</button>
                             </div>
-                            <button type="button" onclick="rcvReportPeriodClose()" class="w-full py-1.5 rounded-lg bg-slate-800 text-white text-[11px] font-bold hover:bg-slate-900 transition-colors">Tutup</button>
                         </div>
-                    </div>
-                    <div id="rcvReportExportWrap" class="relative ml-auto">
-                        <button type="button" id="rcvReportExportBtn" onclick="rcvReportExportToggle(event)" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5" title="Export report material receipt"><i class="fas fa-file-export"></i> Export <i class="fas fa-chevron-down text-[9px]"></i></button>
-                        <div id="rcvReportExportMenu" class="hide absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-xl z-30 overflow-hidden">
-                            <button type="button" onclick="rcvReportExportPick('xlsx')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-excel"></i> XLSX (.xlsx)</button>
-                            <button type="button" onclick="rcvReportExportPick('csv')" class="w-full text-left px-3 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"><i class="fas fa-file-csv"></i> CSV (.csv)</button>
-                        </div>
+                        <button type="button" id="rcvReportFsBtn" onclick="toggleCardFullscreen('rcvReportCard')" class="shrink-0 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all" title="Layar penuh"><i class="fas fa-expand" id="rcvReportFsIcon"></i></button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
