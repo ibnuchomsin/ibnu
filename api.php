@@ -188,6 +188,30 @@ function respond(array $data): void {
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
     exit;
 }
+/** Pesan ramah untuk kode error MySQL (dipakai handler exception global). */
+function dbErrorText(int $code): string
+{
+    switch ($code) {
+        case 1146: return 'Tabel data belum dibuat di database. Hubungi admin.';
+        case 1142: return 'Akun database tidak punya izin untuk operasi ini.';
+        case 1062: return 'Data dengan kode yang sama sudah ada.';
+        case 1406: return 'Data terlalu panjang untuk salah satu kolom.';
+        case 2002:
+        case 2003: return 'Database tidak dapat dihubungi. Coba beberapa saat lagi.';
+        default:   return 'Gagal mengakses database (kode ' . $code . ').';
+    }
+}
+
+// Semua op API membalas JSON; exception MySQL yang tak tertangkap dulu berakhir
+// sebagai HTTP 500 berisi HTML, sehingga klien hanya bisa menampilkan pesan generik.
+set_exception_handler(function (Throwable $e): void {
+    error_log('api.php: ' . $e->getMessage());
+    $code = (int)$e->getCode();
+    $msg  = ($e instanceof mysqli_sql_exception && $code) ? dbErrorText($code) : 'Terjadi kesalahan di server. Coba lagi.';
+    http_response_code(500);
+    echo json_encode(['ok' => false, 'error' => $msg, 'code' => $code], JSON_UNESCAPED_UNICODE);
+});
+
 function isoToDatetime(?string $v): ?string {
     if ($v === null || $v === '') return null;
     if (preg_match('/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/', $v)) {

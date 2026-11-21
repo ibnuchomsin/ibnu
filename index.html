@@ -3741,29 +3741,36 @@
         }
 
         function syncToSheet(sheetName, record) {
-            fetch(API_URL, {
+            // Promise<boolean>: true = server menerima, false = gagal (toast merah sudah ditampilkan
+            // di sini dengan alasan sebenarnya dari server / status HTTP).
+            return fetch(API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ op: 'saveRecord', sheetName: sheetName, record: record })
             })
             .then(res => {
                 if (res.status === 401) { sessionExpired(); throw new Error('SESSION_EXPIRED'); }
-                return res.json();
-            })
-            .then(d => {
-                if (!d.ok) throw new Error(d.error || 'Gagal simpan');
-                // Sinkronkan cache lokal dengan hasil server: kolom foto/dokumen base64
-                // diganti path uploads yang disimpan server (mencegah duplikasi file saat edit)
-                if (record && d.record) {
-                    for (const k of Object.keys(d.record)) {
-                        if (typeof d.record[k] === 'string' && d.record[k].startsWith('/kaizen/uploads/')) record[k] = d.record[k];
+                return res.text().then(txt => {
+                    let d = null;
+                    try { d = JSON.parse(txt); } catch (e) { /* respons bukan JSON (mis. fatal error PHP) */ }
+                    if (!d) throw new Error('Server membalas tidak normal (HTTP ' + res.status + ').');
+                    if (!d.ok) throw new Error(d.error || 'Server menolak menyimpan data.');
+                    // Sinkronkan cache lokal dengan hasil server: kolom foto/dokumen base64
+                    // diganti path uploads yang disimpan server (mencegah duplikasi file saat edit)
+                    if (record && d.record) {
+                        for (const k of Object.keys(d.record)) {
+                            if (typeof d.record[k] === 'string' && d.record[k].startsWith('/kaizen/uploads/')) record[k] = d.record[k];
+                        }
                     }
-                }
+                    return true;
+                });
             })
             .catch(err => {
-                if (String(err) === 'Error: SESSION_EXPIRED') return;   // sudah ditangani sessionExpired()
+                if (String(err) === 'Error: SESSION_EXPIRED') return false;   // sudah ditangani sessionExpired()
                 console.log('Sync Error:', err);
-                showToast('Gagal simpan ke database Cloud! Ukuran foto/file mungkin terlalu besar.', 'error');
+                const alasan = (err instanceof TypeError) ? 'Jaringan/server tidak merespons.' : err.message;
+                showToast('Gagal simpan ke server: ' + alasan, 'error');
+                return false;
             });
         }
 
@@ -6554,8 +6561,9 @@
             persistData();
             renderMasterSuppliers();
             closeModal('modalMasterSupplier');
-            showToast(idEdit ? 'Supplier berhasil diperbarui!' : 'Supplier baru berhasil ditambahkan!', 'success');
-            syncToSheet('Suppliers', rec);
+            syncToSheet('Suppliers', rec).then(ok => {
+                if (ok === true) showToast(idEdit ? 'Supplier berhasil diperbarui!' : 'Supplier baru berhasil ditambahkan!', 'success');
+            });
         }
 
         function openMasterCurahModal(action, id = null) {
@@ -6598,8 +6606,9 @@
             persistData();
             renderMasterCurahs();
             closeModal('modalMasterCurah');
-            showToast(idEdit ? 'Data curah berhasil diperbarui!' : 'Data curah baru berhasil ditambahkan!', 'success');
-            syncToSheet('Curahs', rec);
+            syncToSheet('Curahs', rec).then(ok => {
+                if (ok === true) showToast(idEdit ? 'Data curah berhasil diperbarui!' : 'Data curah baru berhasil ditambahkan!', 'success');
+            });
         }
         /* =================== /MASTER DATA =================== */
 
