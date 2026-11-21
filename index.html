@@ -1178,7 +1178,7 @@
                         <thead class="bg-amber-100">
                             <tr>
                                 <th class="w-10 text-center border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">No</th>
-                                <th class="lg:w-[16%] border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-1.5">Supplier</th>
+                                <th class="min-w-[104px] lg:w-[16%] border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-1.5">Supplier</th>
                                 <th class="border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Material</th>
                                 <th class="text-center w-20 border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Qty</th>
                                 <th class="text-center w-24 border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-1">Driver</th>
@@ -3489,6 +3489,23 @@
                     <button type="submit" class="px-4 py-2 rounded-lg text-xs font-bold text-white bg-cyan-600 hover:bg-cyan-700 transition-colors shadow-sm">Simpan Curah</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL PILIH SUPPLIER (Material Receipt) -->
+    <div id="modalRcvSupplier" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hide opacity-0 transition-opacity duration-200" onclick="closeModal('modalRcvSupplier')">
+        <div class="bg-white w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl modal-animate flex flex-col max-h-[80vh]" onclick="event.stopPropagation()">
+            <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-slate-800 text-sm"><i class="fas fa-truck-fast text-amber-500 mr-1"></i> Pilih Supplier</h3>
+                <button type="button" onclick="closeModal('modalRcvSupplier')" class="text-slate-400 hover:text-slate-600" title="Tutup"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-3 border-b border-slate-100">
+                <input type="text" id="rcvSupplierSearch" oninput="rcvRenderSupplierPicker()" placeholder="Cari nama supplier / ID..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:border-amber-500 outline-none">
+            </div>
+            <div id="rcvSupplierList" class="flex-1 overflow-y-auto"></div>
+            <div class="px-3 py-2 border-t border-slate-100 bg-slate-50">
+                <button type="button" id="rcvSupplierNewBtn" onclick="rcvSupplierNew()" class="w-full px-3 py-2 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"><i class="fas fa-plus mr-1"></i> Tambah supplier baru</button>
+            </div>
         </div>
     </div>
 
@@ -7621,6 +7638,61 @@
 
         let rcvBoardSlots = 5;
 
+        /* Pilih supplier dari Master Supplier untuk baris kosong Material Receipt */
+        let rcvSupplierRow = null;
+
+        function rcvSupplierPickerHtml(q, data) {
+            const list = Array.isArray(data) ? data : MSP_DATA;
+            const term = String(q || '').trim().toLowerCase();
+            const rows = list
+                .filter(s => !term
+                    || String(s.name || '').toLowerCase().includes(term)
+                    || String(s.supId || '').toLowerCase().includes(term))
+                .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+            if (!rows.length) {
+                const kosong = list.length ? 'Tidak ada supplier yang cocok.' : 'Belum ada data supplier.';
+                return `<div class="px-4 py-6 text-center text-xs font-semibold text-slate-400">${kosong}</div>`;
+            }
+            return rows.map(s => `<button type="button" onclick="rcvPickSupplier('${jsStr(s.id)}')" class="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-left hover:bg-amber-50 border-b border-slate-100">
+                <span class="text-xs font-bold text-slate-800 uppercase">${escapeHTML(s.name || '-')}</span>
+                <span class="shrink-0 text-[10px] font-mono font-semibold text-slate-400">${escapeHTML(s.supId || '-')}</span>
+            </button>`).join('');
+        }
+
+        function rcvRenderSupplierPicker() {
+            const box = document.getElementById('rcvSupplierList');
+            if (!box) return;
+            const q = (document.getElementById('rcvSupplierSearch') || {}).value || '';
+            box.innerHTML = rcvSupplierPickerHtml(q);
+        }
+
+        function rcvOpenSupplierPicker(n) {
+            rcvSupplierRow = n;
+            const search = document.getElementById('rcvSupplierSearch');
+            if (search) search.value = '';
+            const isAdmin = ['superadmin', 'admin'].includes((APP_STATE.currentUser || {}).role || '');
+            const newBtn = document.getElementById('rcvSupplierNewBtn');
+            if (newBtn) newBtn.classList.toggle('hide', !isAdmin);
+            rcvRenderSupplierPicker();
+            openModal('modalRcvSupplier');
+            setTimeout(() => { if (search) search.focus(); }, 60);
+        }
+
+        function rcvPickSupplier(id) {
+            const s = MSP_DATA.find(x => x.id === id);
+            const input = document.querySelector(`[data-rcv-field="supplier"][data-rcv-row="${rcvSupplierRow}"]`);
+            closeModal('modalRcvSupplier');
+            if (!s || !input) { rcvSupplierRow = null; return; }
+            input.value = String(s.name || '').toUpperCase();
+            input.focus();
+            rcvSupplierRow = null;
+        }
+
+        function rcvSupplierNew() {
+            closeModal('modalRcvSupplier');
+            openMasterSupplierModal('create');
+        }
+
         function rcvBoardRows() {
             const dateEl = document.getElementById('rcvBoardDate');
             const day = dateEl ? dateEl.value : '';
@@ -7706,7 +7778,12 @@
                 blanks += `
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center text-xs font-bold border border-slate-100 text-slate-400">${n}</td>
-                    <td class="border border-slate-100 px-1 align-top py-1"><input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full px-1.5 py-1.5 bg-transparent text-[11px] font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold"></td>
+                    <td class="min-w-[104px] border border-slate-100 px-1 align-top py-1">
+                        <div class="flex items-center gap-0.5">
+                            <input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full min-w-0 flex-1 px-1.5 py-1.5 bg-transparent text-[11px] font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold">
+                            <button type="button" onclick="rcvOpenSupplierPicker(${n})" class="shrink-0 w-5 h-5 inline-flex items-center justify-center text-cyan-600 hover:text-white hover:bg-cyan-500 bg-cyan-50 border border-cyan-200 rounded transition-colors" title="Pilih supplier dari Master Supplier"><i class="fas fa-plus text-[9px]"></i></button>
+                        </div>
+                    </td>
                     <td class="border border-slate-100 px-1 align-top py-1">
                         <div class="flex flex-col gap-0.5" data-rcv-mat-wrap="${n}">
                             <div class="flex items-center gap-0.5" data-rcv-line="1">
