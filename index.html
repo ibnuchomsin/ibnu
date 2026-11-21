@@ -8961,10 +8961,7 @@
             if (docType === 'ha') {
                 return {
                     placeholder: '-- Pilih Curah (Master Data) --',
-                    items: MCU_DATA.map(c => ({
-                        value: String(c.name || '').trim(),
-                        text: [String(c.curahId || '').trim(), String(c.name || '').trim()].filter(Boolean).join(' · ')
-                    }))
+                    items: MCU_DATA.map(c => ({ value: String(c.name || '').trim(), text: String(c.name || '').trim() }))
                 };
             }
             return {
