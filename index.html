@@ -8924,9 +8924,9 @@
         const LAB_SIGN_FILLED = 'bg-emerald-50 border border-emerald-200 text-emerald-600 px-2.5 rounded-lg shadow-sm transition-colors';
 
         /* ---------- Pilihan dropdown + Isi Manual (Product Name / Holding Tanki / Line Production) ----------
-           Product Name: daftar nama produk diambil dari MASTER PRODUK (MP_DATA.partName), opsi terakhir
-           "Isi Manual..." memunculkan kotak ketik di bawahnya. Tanki & Line: opsi "Isi Manual..." di
-           PALING BAWAH daftar (mirror QMS), memunculkan kotak ketik manual. */
+           Product Name: sumber opsi mengikuti jenis dokumen — Hasil Analisa dari MASTER CURAH (MCU_DATA),
+           Release Note dari MASTER PRODUK (MP_DATA.partName). Opsi terakhir "Isi Manual..." memunculkan
+           kotak ketik di bawahnya. Tanki & Line: opsi "Isi Manual..." di PALING BAWAH daftar (mirror QMS). */
         const LAB_MANUAL_FIELDS = {
             Product: { sel: 'labProductNameSel', inp: 'labProductName' },
             Tanki:   { sel: 'labHoldingTanki',   inp: 'labHoldingTankiManual' },
@@ -8957,13 +8957,31 @@
             return sel.value.trim();
         }
 
+        function labProductOptionsSource(docType) {
+            if (docType === 'ha') {
+                return {
+                    placeholder: '-- Pilih Curah (Master Data) --',
+                    items: MCU_DATA.map(c => ({
+                        value: String(c.name || '').trim(),
+                        text: [String(c.curahId || '').trim(), String(c.name || '').trim()].filter(Boolean).join(' · ')
+                    }))
+                };
+            }
+            return {
+                placeholder: '-- Pilih Produk (Master Data) --',
+                items: MP_DATA.map(p => ({ value: String(p.partName || '').trim(), text: String(p.partName || '').trim() }))
+            };
+        }
+
         function labPopulateProductOptions() {
             const sel = document.getElementById('labProductNameSel');
             if (!sel) return;
-            const daftar = [...new Set(MP_DATA.map(p => String(p.partName || '').trim()).filter(Boolean))]
-                .sort((a, b) => a.localeCompare(b));
-            sel.innerHTML = '<option value="" disabled selected>-- Pilih Produk (Master Data) --</option>'
-                + daftar.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join('')
+            const src = labProductOptionsSource(labDocType);
+            const uniq = new Map();
+            src.items.forEach(it => { if (it.value && !uniq.has(it.value)) uniq.set(it.value, it.text); });
+            const daftar = [...uniq.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+            sel.innerHTML = `<option value="" disabled selected>${escapeHTML(src.placeholder)}</option>`
+                + daftar.map(([v, t]) => `<option value="${escapeHTML(v)}">${escapeHTML(t)}</option>`).join('')
                 + '<option value="__MANUAL__">✍ Isi Manual...</option>';
         }
 
@@ -8976,7 +8994,7 @@
             labDocType = mode === 'ha' ? 'ha' : 'rn';
             document.getElementById('formQcLab').reset();
             document.getElementById('labId').value = '';
-            labPopulateProductOptions();   // dropdown produk selalu segar dari Master Produk
+            labPopulateProductOptions();   // selalu segar dari master sesuai mode (HA: curah, RN: produk)
             ['Product', 'Tanki', 'Line'].forEach(f => labToggleManual(f));   // kembali ke mode pilih (sembunyikan kotak manual)
             ['Dibuat', 'Diperiksa', 'Diketahui'].forEach(k => {
                 document.getElementById('labSign' + k).value = '';
