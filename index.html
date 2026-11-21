@@ -1178,7 +1178,7 @@
                         <thead class="bg-amber-100">
                             <tr>
                                 <th class="w-10 text-center border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">No</th>
-                                <th class="min-w-[104px] lg:w-[16%] border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-1.5">Supplier</th>
+                                <th class="min-w-[104px] lg:w-[18%] border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-1.5">Supplier</th>
                                 <th class="border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Material</th>
                                 <th class="text-center w-20 border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-2">Qty</th>
                                 <th class="text-center w-24 border border-amber-200 text-[11px] sm:text-[13px] font-black uppercase tracking-wide text-amber-900 py-2.5 whitespace-nowrap px-1">Driver</th>
@@ -7678,12 +7678,19 @@
             setTimeout(() => { if (search) search.focus(); }, 60);
         }
 
+        function rcvAutoGrow(el) {
+            if (!el || !el.style) return;
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
         function rcvPickSupplier(id) {
             const s = MSP_DATA.find(x => x.id === id);
             const input = document.querySelector(`[data-rcv-field="supplier"][data-rcv-row="${rcvSupplierRow}"]`);
             closeModal('modalRcvSupplier');
             if (!s || !input) { rcvSupplierRow = null; return; }
             input.value = String(s.name || '').toUpperCase();
+            rcvAutoGrow(input);
             input.focus();
             rcvSupplierRow = null;
         }
@@ -7760,7 +7767,7 @@
                 return `
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center border border-slate-100 align-top py-1">${baris(`<span class="text-xs font-bold">${i + 1}</span>`)}</td>
-                    <td class="font-bold text-[11px] text-slate-800 border border-slate-100 px-1.5 align-top py-1"><div class="flex items-center h-7 uppercase">${escapeHTML(first.r.ref || '-')}</div></td>
+                    <td class="min-w-[104px] font-bold text-[11px] text-slate-800 border border-slate-100 px-1.5 align-top py-1"><div class="flex items-start min-h-[28px] py-0.5 uppercase leading-tight break-words">${escapeHTML(first.r.ref || '-')}</div></td>
                     <td class="border border-slate-100 align-top py-1">${materialLines}</td>
                     <td class="border border-slate-100 align-top py-1">${qtyLines}</td>
                     <td class="text-center text-[11px] font-semibold text-slate-700 border border-slate-100 px-1 uppercase align-top py-1">${baris(meta.driver ? escapeHTML(meta.driver) : '<span class="text-slate-300">—</span>')}</td>
@@ -7779,9 +7786,9 @@
                 <tr class="hover:bg-amber-50/40">
                     <td class="text-center text-xs font-bold border border-slate-100 text-slate-400">${n}</td>
                     <td class="min-w-[104px] border border-slate-100 px-1 align-top py-1">
-                        <div class="flex items-center gap-0.5">
-                            <input type="text" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." class="w-full min-w-0 flex-1 px-1.5 py-1.5 bg-transparent text-[11px] font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold">
-                            <button type="button" onclick="rcvOpenSupplierPicker(${n})" class="shrink-0 w-5 h-5 inline-flex items-center justify-center text-cyan-600 hover:text-white hover:bg-cyan-500 bg-cyan-50 border border-cyan-200 rounded transition-colors" title="Pilih supplier dari Master Supplier"><i class="fas fa-plus text-[9px]"></i></button>
+                        <div class="flex items-start gap-0.5">
+                            <textarea rows="1" data-rcv-field="supplier" data-rcv-row="${n}" placeholder="Supplier..." oninput="rcvAutoGrow(this)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" class="w-full min-w-0 flex-1 px-1.5 py-1.5 bg-transparent text-[11px] font-bold text-slate-800 outline-none uppercase placeholder:text-slate-300 placeholder:font-semibold resize-none overflow-hidden leading-tight break-words"></textarea>
+                            <button type="button" onclick="rcvOpenSupplierPicker(${n})" class="shrink-0 mt-1 w-5 h-5 inline-flex items-center justify-center text-cyan-600 hover:text-white hover:bg-cyan-500 bg-cyan-50 border border-cyan-200 rounded transition-colors" title="Pilih supplier dari Master Supplier"><i class="fas fa-plus text-[9px]"></i></button>
                         </div>
                     </td>
                     <td class="border border-slate-100 px-1 align-top py-1">
