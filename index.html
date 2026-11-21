@@ -497,7 +497,6 @@
                 <div class="relative">
                     <button id="userMenuBtn" onclick="toggleUserMenu(event)" class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 transition-all" title="Menu Akun">
                         <i class="fas fa-user-circle text-brand-600"></i>
-                        <span id="currentRoleLabel">Superadmin</span>
                         <i id="userMenuCaret" class="fas fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200"></i>
                     </button>
                     <div id="userMenu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 py-1.5 z-50 hide opacity-0 transition-all duration-200">
@@ -4956,7 +4955,6 @@
             const user = APP_STATE.currentUser;
             document.getElementById('userName').textContent = user.name;
             document.getElementById('userAvatar').textContent = (user.name || 'U').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
-            document.getElementById('currentRoleLabel').textContent = (user.role || 'user').toUpperCase();
             const badge = document.getElementById('userBadge');
             badge.textContent = user.role;
             badge.className = 'inline-block text-[9px] font-extrabold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md uppercase';
