@@ -1099,7 +1099,8 @@
                             <tr>
                                 <th class="w-10 text-center border border-slate-200 text-xs py-2 px-2">No</th>
                                 <th class="border border-slate-200 text-xs py-2 px-2">Tanggal</th>
-                                <th class="border border-slate-200 text-xs py-2 px-2">Supplier / No. SJ</th>
+                                <th class="border border-slate-200 text-xs py-2 px-2">Supplier</th>
+                                <th class="border border-slate-200 text-xs py-2 px-2">No. SJ Masuk</th>
                                 <th class="border border-slate-200 text-xs py-2 px-2">Part / Material</th>
                                 <th class="border border-slate-200 text-xs py-2 px-2">Kelengkapan COA &amp; Fisik</th>
                                 <th class="border border-slate-200 text-xs py-2 px-2">Inspector</th>
@@ -2513,6 +2514,10 @@
                 <div>
                     <label id="qcRefLabel" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Referensi</label>
                     <input type="text" id="qcRef" required placeholder="No. Batch / Area / Customer" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none uppercase">
+                </div>
+                <div id="qcSjWrap" class="hide">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">No. SJ Masuk</label>
+                    <input type="text" id="qcSj" placeholder="No. Surat Jalan supplier" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white outline-none uppercase">
                 </div>
                 <div class="grid grid-cols-3 gap-3">
                     <div class="col-span-2">
@@ -6231,7 +6236,7 @@
             lab:       { title: 'Input QC Lab',       ref: 'No. Batch / Lot',            item: 'Part / Sampel',   param: 'Hasil Uji Lab (Viskositas/Density/dll)' },
             patrol:    { title: 'Input QC Patrol',    ref: 'Area / Line Produksi',       item: 'Part / Produk',   param: 'Parameter Pengecekan Patrol' },
             outgoing:  { title: 'Input QC Outgoing',  ref: 'Customer / No. Surat Jalan', item: 'Part / Produk',   param: 'Cek Fisik Kemasan, Segel & Qty' },
-            receiving: { title: 'Input QC Receiving', ref: 'Supplier / No. SJ Masuk',    item: 'Part / Material', param: 'Kelengkapan COA & Kondisi Fisik' }
+            receiving: { title: 'Input QC Receiving', ref: 'Supplier',                 item: 'Part / Material', param: 'Kelengkapan COA & Kondisi Fisik' }
         };
         const QC_PREFIX = { lab: 'QCL', patrol: 'QCP', outgoing: 'QCO', receiving: 'QCR', report_supplier: 'QRS', scan: 'QSC' };
         const RS_MONTH_NUM = { JANUARI: 1, FEBRUARI: 2, MARET: 3, APRIL: 4, MEI: 5, JUNI: 6, JULI: 7, AGUSTUS: 8, SEPTEMBER: 9, OKTOBER: 10, NOVEMBER: 11, DESEMBER: 12 };
@@ -6264,6 +6269,17 @@
             return { text: typeof raw === 'string' ? raw : '' };
         }
         const qcReceivingNoteText = rec => qcReceivingMeta(rec).text;
+        /* Supplier & No. SJ Masuk disimpan terpisah: `ref` = supplier, meta.sj = nomor surat jalan.
+           Data lama yang masih gabungan "Supplier / No. SJ" dipecah otomatis saat ditampilkan. */
+        function qcReceivingRefPair(rec) {
+            const meta = qcReceivingMeta(rec);
+            const ref = String((rec && rec.ref) || '').trim();
+            const sj = String(meta.sj || '').trim();
+            if (sj) return { supplier: ref, sj: sj };
+            const pisah = ref.indexOf(' / ');
+            if (pisah > 0) return { supplier: ref.slice(0, pisah).trim(), sj: ref.slice(pisah + 3).trim() };
+            return { supplier: ref, sj: '' };
+        }
         const qcWriteReceivingMeta = (rec, patch) => JSON.stringify({ ...qcReceivingMeta(rec), ...patch });
         const qcStampText = s => {
             if (!s) return '';
@@ -7377,6 +7393,7 @@
             document.getElementById('qcTimeWrap').classList.toggle('hide', category !== 'patrol');
             document.getElementById('qcReceivingStampWrap').classList.toggle('hide', category !== 'receiving');
             document.getElementById('qcQtyWrap').classList.toggle('hide', category !== 'receiving');
+            document.getElementById('qcSjWrap').classList.toggle('hide', category !== 'receiving');
             document.getElementById('qcRefLabel').textContent = cfg.ref;
             document.getElementById('qcItemLabel').textContent = cfg.item;
             document.getElementById('qcParamLabel').textContent = cfg.param;
@@ -7388,7 +7405,9 @@
                 document.getElementById('qcId').value = rec.id;
                 document.getElementById('qcDate').value = String(rec.date || '').substring(0, 10);
                 document.getElementById('qcTime').value = String(rec.time || '').substring(0, 5);
-                document.getElementById('qcRef').value = rec.ref || '';
+                const pairEdit = category === 'receiving' ? qcReceivingRefPair(rec) : null;
+                document.getElementById('qcRef').value = pairEdit ? pairEdit.supplier : (rec.ref || '');
+                document.getElementById('qcSj').value = pairEdit ? pairEdit.sj : '';
                 document.getElementById('qcItemName').value = rec.item || '';
                 document.getElementById('qcParam').value = rec.param || '';
                 document.getElementById('qcInspector').value = rec.inspector || '';
@@ -7422,6 +7441,7 @@
                 if (ci) stampPatch.clockInAt = ci;
                 if (ck) stampPatch.checkedAt = ck;
                 stampPatch.qty = sanitizeInput(document.getElementById('qcQty').value.toUpperCase());
+                stampPatch.sj = sanitizeInput(document.getElementById('qcSj').value.toUpperCase());
             }
             const payload = {
                 category: category,
@@ -7556,9 +7576,10 @@
                 const bolehHapus = bolehHapusData();
                 const isRcv = cat === 'receiving';
                 tbody.innerHTML = rows.length === 0
-                    ? `<tr><td colspan="${isRcv ? 11 : 9}" class="text-center text-xs text-slate-400 font-semibold py-8">${cat === 'lab' ? `Belum ada data ${labView === 'ha' ? 'Hasil Analisa' : 'Release Note'}. Gunakan tombol di kanan atas.` : 'Belum ada data. Klik tombol tambah di kanan atas.'}</td></tr>`
+                    ? `<tr><td colspan="${isRcv ? 12 : 9}" class="text-center text-xs text-slate-400 font-semibold py-8">${cat === 'lab' ? `Belum ada data ${labView === 'ha' ? 'Hasil Analisa' : 'Release Note'}. Gunakan tombol di kanan atas.` : 'Belum ada data. Klik tombol tambah di kanan atas.'}</td></tr>`
                     : rows.map((r, i) => {
                         const meta = isRcv ? qcReceivingMeta(r) : null;
+                        const refPair = isRcv ? qcReceivingRefPair(r) : null;
                         const extraCols = isRcv
                             ? `<td class="font-mono text-[11px] text-cyan-700 border border-slate-100 whitespace-nowrap px-2" title="Clock in kedatangan">${meta.clockInAt ? qcStampText(meta.clockInAt) : '<span class="text-slate-300">—</span>'}</td>
                                <td class="font-mono text-[11px] text-emerald-700 border border-slate-100 whitespace-nowrap px-2" title="Finish cek pengecekan">${meta.checkedAt ? qcStampText(meta.checkedAt) : '<span class="text-slate-300">—</span>'}</td>`
@@ -7571,7 +7592,8 @@
                         <tr class="hover:bg-slate-50">
                             <td class="text-center text-xs border border-slate-100">${i + 1}</td>
                             <td class="font-mono text-xs border border-slate-100 whitespace-nowrap px-2">${escapeHTML(qcDispDate(r, cat))}</td>
-                            <td class="font-bold text-xs text-slate-800 border border-slate-100 px-2">${escapeHTML(r.ref || '-')}</td>
+                            <td class="font-bold text-xs text-slate-800 border border-slate-100 px-2">${escapeHTML(refPair ? (refPair.supplier || '-') : (r.ref || '-'))}</td>
+                            ${isRcv ? `<td class="font-mono text-xs text-slate-700 border border-slate-100 px-2 whitespace-nowrap">${escapeHTML(refPair.sj || '-')}</td>` : ''}
                             <td class="text-xs font-semibold text-slate-700 border border-slate-100 px-2">${escapeHTML(r.item || '-')}</td>
                             <td class="text-xs text-slate-700 border border-slate-100 px-2">${escapeHTML(r.param || '-')}</td>
                             <td class="text-xs text-slate-600 border border-slate-100 px-2">${escapeHTML(r.inspector || '-')}</td>
