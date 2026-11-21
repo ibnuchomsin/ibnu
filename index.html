@@ -3159,6 +3159,7 @@
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhTransaksi" value="wh-transaksi" class="w-3.5 h-3.5 rounded text-emerald-600 focus:ring-emerald-500"><span>Transaksi</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhLedger" value="wh-ledger" class="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500"><span>Report Detail</span></label>
                             <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhPrintdn" value="wh-printdn" class="w-3.5 h-3.5 rounded text-orange-600 focus:ring-orange-500"><span>Print DN</span></label>
+                            <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600 cursor-pointer"><input type="checkbox" id="permWhStockreport" value="wh-stockreport" class="w-3.5 h-3.5 rounded text-purple-600 focus:ring-purple-500"><span>Stock Report</span></label>
                             <p class="text-[9px] text-slate-400 italic">* Semua dicentang / kosong semua = seluruh sub-menu tampil.</p>
                         </div>
                         <label class="flex items-center gap-2.5 text-xs font-semibold text-slate-700 cursor-pointer">
@@ -10660,7 +10661,7 @@
             document.getElementById('uId').value = '';
             setPasswordHidden('uPassword', 'eyeIconUser');
             
-            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcGrReport', 'permQcScan', 'permRsSupplier', 'permEmpProfile', 'permWarehouse', 'permWhTransaksi', 'permWhLedger', 'permWhPrintdn'].forEach(cb => document.getElementById(cb).checked = false);
+            ['permTicket', 'permAsset', 'permGemba', 'permGembaQc', 'permDocument', 'permQcLab', 'permQcPatrol', 'permQcOutgoing', 'permQcReceiving', 'permQcRcvBoard', 'permQcGrReport', 'permQcScan', 'permRsSupplier', 'permEmpProfile', 'permWarehouse', 'permWhTransaksi', 'permWhLedger', 'permWhPrintdn', 'permWhStockreport'].forEach(cb => document.getElementById(cb).checked = false);
             document.getElementById('qcSubPermsBox').classList.add('hide');
             document.getElementById('whSubPermsBox').classList.add('hide');
 
@@ -10708,7 +10709,7 @@
                     const adaQcSub = Object.keys(qcSubIds).some(t => perms.includes(t));
                     Object.keys(qcSubIds).forEach(t => document.getElementById(qcSubIds[t]).checked = adaQcSub ? perms.includes(t) : true);
                     if (u.role === 'superadmin' || perms.includes('warehouse')) document.getElementById('permWarehouse').checked = true;
-                    const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn' };
+                    const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn', 'wh-stockreport': 'permWhStockreport' };
                     const adaWhSub = Object.keys(whSubIds).some(t => perms.includes(t));
                     Object.keys(whSubIds).forEach(t => document.getElementById(whSubIds[t]).checked = adaWhSub ? perms.includes(t) : true);
                     loadMfaSettings(u.id);   // muat setting Verifikasi 2 Langkah user ini
@@ -10758,7 +10759,7 @@
                 }
                 if(document.getElementById('permWarehouse').checked) {
                     permissions.push('warehouse');
-                    const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn' };
+                    const whSubIds = { 'wh-transaksi': 'permWhTransaksi', 'wh-ledger': 'permWhLedger', 'wh-printdn': 'permWhPrintdn', 'wh-stockreport': 'permWhStockreport' };
                     const whIds = Object.keys(whSubIds);
                     const whChecked = whIds.filter(t => document.getElementById(whSubIds[t]).checked);
                     if (whChecked.length > 0 && whChecked.length < whIds.length) whChecked.forEach(t => permissions.push(t));
